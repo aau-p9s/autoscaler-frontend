@@ -44,7 +44,7 @@ public class Forecaster
             // get predictions
             Process Predicter = new();
             Predicter.StartInfo.RedirectStandardOutput = true;
-            Predicter.StartInfo.FileName = "../../autoscaler/autoscaler.py";
+            Predicter.StartInfo.FileName = ArgumentParser.Get("--scaler");
             Predicter.Start();
             var line = Predicter.StandardOutput.ReadLine();
             if (line == null) continue;

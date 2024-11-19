@@ -55,7 +55,7 @@ public class Forecaster
             foreach(var (time, value) in data.Select(item => new Tuple<DateTime, int>(DateTime.Parse((string)item["time"]), (int)item["value"]))) {
                 Predictions[time] = value;
             }
-            Thread.Sleep(int.Parse(ArgumentParser.get("--period")));
+            Thread.Sleep(int.Parse(ArgumentParser.Get("--period")));
         }
     }
 }

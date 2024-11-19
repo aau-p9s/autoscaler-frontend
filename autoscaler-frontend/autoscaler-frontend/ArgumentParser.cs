@@ -7,7 +7,7 @@ class ArgumentParser {
         for(int i = 0; i < args.Length; i++)
             Args.Add(args[i]);
     }
-    public static string get(string key) {
+    public static string Get(string key) {
         return Args.Contains(key) ? Args[Args.IndexOf(key)+1] : ArgMap[key];
     }
 }

@@ -14,7 +14,7 @@ const root = createRoot(rootElement);
 root.render(
   <BrowserRouter basename={baseUrl}>
       <Layout>
-        <TimePeriodGraph />
+        <TimePeriodGraph/>
       </Layout>
   </BrowserRouter>);
 

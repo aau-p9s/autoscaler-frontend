@@ -14,6 +14,9 @@
         dotnet-sdk_7
         dotnet-aspnetcore_7
         dotnet-runtime_7
+        csharp-ls
+        omnisharp-roslyn
+        mono
       ];
     };
   };

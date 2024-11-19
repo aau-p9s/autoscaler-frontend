@@ -1,8 +1,17 @@
+using autoscaler_frontend;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllers();
+builder.Services.AddCors(options => {
+    options.AddPolicy("AllowSpecificOrigin", builder => {
+        builder.WithOrigins("http://localhost:44411", "https://localhost:44411")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
 
 var app = builder.Build();
 
@@ -13,15 +22,19 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection(); // why is this default?
 app.UseStaticFiles();
 app.UseRouting();
 
+ArgumentParser.SetArgs(args);
 
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller}/{action=Index}/{id?}");
+Forecaster.Singleton.Start();
+
+//app.MapControllers();
 
 app.MapFallbackToFile("index.html");
+
+app.UseCors();
+app.UseEndpoints(endpoints => { endpoints.MapControllers().RequireCors("AllowSpecificOrigin"); });
 
 app.Run();

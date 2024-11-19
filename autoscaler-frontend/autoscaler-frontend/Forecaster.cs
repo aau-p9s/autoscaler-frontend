@@ -46,14 +46,14 @@ public class Forecaster
             Predicter.StartInfo.RedirectStandardOutput = true;
             Predicter.StartInfo.FileName = "../../autoscaler/autoscaler.py";
             Predicter.Start();
-            string? line = Predicter.StandardOutput.ReadLine();
-            if(line != null) {
-                var data = System.Text.Json.JsonSerializer.Deserialize<JsonArray>(line);
-                if(data != null) {
-                    foreach(var item in data) {
-                        Predictions[DateTime.Parse((string)item["time"])] = (int)item["value"];
-                    }
-                }
+            var line = Predicter.StandardOutput.ReadLine();
+            if (line == null) continue;
+
+            var data = System.Text.Json.JsonSerializer.Deserialize<JsonArray>(line);
+            if (data == null) continue;
+
+            foreach(var (time, value) in data.Select(item => new Tuple<DateTime, int>(DateTime.Parse((string)item["time"]), (int)item["value"]))) {
+                Predictions[time] = value;
             }
             Thread.Sleep(int.Parse(ArgumentParser.get("--period")));
         }

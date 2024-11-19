@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Line } from 'react-chartjs-2';
 import 'chart.js/auto';
 
 const TimePeriodGraph = () => {
     const [timePeriod, setTimePeriod] = useState('hour');
-    const generateData = (interval) => {
+    const [chartData, setChartData] = useState(null); // Start with null since data is fetched
+    const [isLoading, setIsLoading] = useState(true); // Track loading state
+    const generateData = async (interval) => {
         let labels;
         let data;
 
@@ -16,26 +18,40 @@ const TimePeriodGraph = () => {
             data = [30, 35, 28, 40, 45, 50, 55, 60, 62, 65, 70, 72, 75, 78, 80, 82, 85, 87, 90, 92, 95, 98, 100, 105]; // Dummy data for the next day
         } else if (interval === 'week') {
             labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-            data = [100, 110, 120, 130, 125, 135, 140]; // Dummy data for the next week
+            var response = await (fetch("http://localhost:5280/forecast"))
+            var json = await response.json()
+            data = Object.keys(json.item2).map(key => json.item2[key])
+            //data = [100, 110, 120, 130, 125, 135, 140]; // Dummy data for the next week
         }
 
-        return { labels, data };
+        return  {
+            labels,
+            datasets: [
+                {
+                    label: `Forecast for the next ${timePeriod}`,
+                    data,
+                    fill: false,
+                    backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                },
+            ],
+        };
     };
 
-    const { labels, data } = generateData(timePeriod);
-
-    const chartData = {
-        labels,
-        datasets: [
-            {
-                label: `Forecast for the next ${timePeriod}`,
-                data,
-                fill: false,
-                backgroundColor: 'rgba(75, 192, 192, 0.6)',
-                borderColor: 'rgba(75, 192, 192, 1)',
-            },
-        ],
-    };
+    useEffect(() => {
+        const fetchData = async () => {
+          setIsLoading(true);
+          const data = await generateData(timePeriod);
+          setChartData(data);
+          setIsLoading(false);
+        };
+    
+        fetchData();
+      }, [timePeriod]);
+    
+      if (isLoading) {
+        return <div>Loading chart data...</div>;
+    }
 
     const options = {
         responsive: true,

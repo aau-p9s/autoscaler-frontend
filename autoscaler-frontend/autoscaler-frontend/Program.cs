@@ -1,8 +1,10 @@
+using autoscaler_frontend;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllers();
 
 var app = builder.Build();
 
@@ -13,14 +15,15 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection(); // why is this default?
 app.UseStaticFiles();
 app.UseRouting();
 
+ArgumentParser.SetArgs(args);
 
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller}/{action=Index}/{id?}");
+Forecaster.Singleton.Start();
+
+app.MapControllers();
 
 app.MapFallbackToFile("index.html");
 

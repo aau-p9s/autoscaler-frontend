@@ -11,19 +11,22 @@ env:
 
 jobs:
   publish:
+    runs-on: ubuntu-latest
     permissions:
       packages: write
-  steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v4
-    - name: Log in
-      uses: docker/login-actor
-      with:
-        registry: ${{ env.REGISTRY }}
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-    - name: Build and push Docker image
-      uses: docker/build-push-action
-      with:
-        context: .
-        push: true
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Log in
+        uses: docker/login-actor
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action
+        with:
+          context: .
+          push: true

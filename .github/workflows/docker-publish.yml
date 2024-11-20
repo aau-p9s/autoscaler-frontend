@@ -1,0 +1,32 @@
+name: Create and publish Docker image
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ autoscaler-frontend }}
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Log in
+        uses: docker/login-actor@v1
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          push: true

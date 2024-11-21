@@ -37,4 +37,6 @@ app.MapFallbackToFile("index.html");
 app.UseCors();
 app.UseEndpoints(endpoints => { endpoints.MapControllers().RequireCors("AllowSpecificOrigin"); });
 
+var db = new Database(ArgumentParser.Get("--database"));
+
 app.Run();

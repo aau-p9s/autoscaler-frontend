@@ -2,7 +2,8 @@ class ArgumentParser {
     private static List<string> Args = new();
     private static Dictionary<string, string> ArgMap = new(){
         {"--period", "604800000"}, // 1 week
-        { "--scaler", "../../autoscaler/autoscaler.py" }
+        { "--scaler", "../../autoscaler/autoscaler.py" },
+        {"--database", ":memory:"}
     };
     public static void SetArgs(string[] args){
         for(int i = 0; i < args.Length; i++)

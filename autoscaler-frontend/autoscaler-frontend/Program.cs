@@ -38,7 +38,5 @@ app.UseCors();
 app.UseEndpoints(endpoints => { endpoints.MapControllers().RequireCors("AllowSpecificOrigin"); });
 
 var db = new Database(ArgumentParser.Get("--database"));
-db.Add(DateTime.Now, 0);
-Console.WriteLine(db.getByTimestamp(DateTime.Now));
 
 app.Run();

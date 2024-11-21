@@ -27,7 +27,7 @@ class Database{
         command.Parameters.AddWithValue("$amount", value);
         command.ExecuteNonQuery();
     }
-    public Dictionary<int, int> getByTimestamp(DateTime time) {
+    public Dictionary<int, int> GetByTimestamp(DateTime time) {
         Dictionary<int, int> result = new();
         var command = connection.CreateCommand();
         command.CommandText = @"

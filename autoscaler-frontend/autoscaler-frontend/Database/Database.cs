@@ -64,7 +64,7 @@ class Database{
                         $fetch_time
                     )
                 ";
-                command.Parameters.AddWithValue("$time", timestamp);
+                command.Parameters.AddWithValue("$time",new DateTime(1970, 1, 1, 0, 0, 0).AddSeconds(timestamp));
                 command.Parameters.AddWithValue("amount", value);
                 command.Parameters.AddWithValue("$fetch_time", DateTime.Now);
                 command.ExecuteNonQuery();

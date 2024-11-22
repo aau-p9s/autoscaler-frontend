@@ -19,6 +19,7 @@ class PrometheusGenerator {
                 result_list.Append(new Tuple<int, int>(x, y));
             }
         }
+        Console.WriteLine(result_list.Count());
         return result_list;
     }
 }

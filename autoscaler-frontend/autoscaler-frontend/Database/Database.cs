@@ -58,17 +58,16 @@ class Database{
             foreach(var (timestamp, value) in data) {
                 var command = Connection.CreateCommand();
                 command.CommandText = @"
-                    INSERT INTO forecasts (timestamp, amount, fetch_time) VALUES (
+                    INSERT INTO historical (timestamp, amount) VALUES (
                         $time,
-                        $amount,
-                        $fetch_time
+                        $amount
                     )
                 ";
                 command.Parameters.AddWithValue("$time",new DateTime(1970, 1, 1, 0, 0, 0).AddSeconds(timestamp));
                 command.Parameters.AddWithValue("amount", value);
-                command.Parameters.AddWithValue("$fetch_time", DateTime.Now);
                 command.ExecuteNonQuery();
             }
+            Console.WriteLine("Successfully fetched historical data");
             Thread.Sleep(15000);
         }
     }

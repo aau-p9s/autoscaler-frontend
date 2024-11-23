@@ -5,14 +5,20 @@ class PrometheusGenerator {
     private readonly HttpClient client;
     public PrometheusGenerator() {
         client = new HttpClient();
-        var addr = ArgumentParser.Get("--prometheus-addr");
     }
 
     public async Task<IEnumerable<Tuple<double, string>>> GetMetrics() {
         var query = BuildQuery();
-        var response = await client.GetAsync(query);
+        List<Tuple<double, string>> result_list = new();
+        HttpResponseMessage response;
+        try {
+            response = await client.GetAsync(query);
+        }
+        catch {
+            Console.WriteLine("prometheus seems to be down...");
+            return result_list;
+        }
         var json = await response.Content.ReadFromJsonAsync<JsonObject>();
-        List<Tuple<double, string>> result_list = new List<Tuple<double, string>>();
         if(json == null)
             goto end;
         var data = json["data"];

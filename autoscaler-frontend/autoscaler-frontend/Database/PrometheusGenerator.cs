@@ -13,11 +13,34 @@ class PrometheusGenerator {
         var response = await client.GetAsync(query);
         var json = await response.Content.ReadFromJsonAsync<JsonObject>();
         List<Tuple<double, string>> result_list = new List<Tuple<double, string>>();
-        foreach(var result in json["data"]["result"].AsArray()) {
-            foreach(var (x, y) in result["values"].AsArray().Select(value => ((double)value[0].AsValue(), (string)value[1].AsValue()))) {
-                result_list.Add(new Tuple<double, string>(x, y));
+        if(json == null)
+            goto end;
+        var data = json["data"];
+        if(data == null)
+            goto end;
+        var result = data["result"];
+        if(result == null)
+            goto end;
+        foreach(var item in result.AsArray()) {
+            if(item == null)
+                continue;
+            var valuesObj = item["values"];
+            if(valuesObj == null)
+                continue;
+            var values = valuesObj.AsArray();
+            foreach(var value in values) {
+                if(value == null)
+                    continue;
+
+                try{
+                    result_list.Add(new Tuple<double, string>((double)value[0], (string)value[1]));
+                }
+                catch(NullReferenceException e) {
+                    Console.WriteLine(e);
+                }
             }
         }
+        end:
         return result_list;
     }
     public string BuildQuery() {

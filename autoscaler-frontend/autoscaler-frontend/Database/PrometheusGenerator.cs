@@ -16,7 +16,7 @@ class PrometheusGenerator {
         }
         catch {
             Console.WriteLine("prometheus seems to be down...");
-            return result_list;
+            goto end;
         }
         var json = await response.Content.ReadFromJsonAsync<JsonObject>();
         if(json == null)

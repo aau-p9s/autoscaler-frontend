@@ -39,7 +39,7 @@ class PrometheusGenerator {
                     continue;
 
                 try{
-                    result_list.Add(new Tuple<double, int>((double)value[0], (int)value[1]));
+                    result_list.Add(new Tuple<double, int>((double)value[0], int.Parse((string)value[1])));
                 }
                 catch(NullReferenceException e) {
                     Console.WriteLine(e);

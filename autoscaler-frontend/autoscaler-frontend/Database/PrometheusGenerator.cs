@@ -48,8 +48,7 @@ class PrometheusGenerator {
         }
         // todo: maybe let prometheus descide what max is if possible?
         end:
-        var max = result_list.Count > 0 ? result_list.Select((_, e) => e).Max() : 1.0;
-        return result_list.Select((t, value) => new Tuple<double, double>(t.Item1, value/max * 100.0));
+        return result_list;
     }
     public string BuildQuery() {
         var addr = ArgumentParser.Get("--prometheus-addr");

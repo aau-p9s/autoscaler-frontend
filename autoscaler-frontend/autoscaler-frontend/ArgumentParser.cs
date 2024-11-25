@@ -3,7 +3,8 @@ class ArgumentParser {
     private static Dictionary<string, string> ArgMap = new(){
         {"--period", "604800000"}, // 1 week
         { "--scaler", "../../autoscaler/autoscaler.py" },
-        {"--database", ":memory:"}
+        {"--database", ":memory:"},
+        {"--prometheus-addr", "http://localhost:30000"}
     };
     public static void SetArgs(string[] args){
         for(int i = 0; i < args.Length; i++)

@@ -39,4 +39,7 @@ app.UseEndpoints(endpoints => { endpoints.MapControllers().RequireCors("AllowSpe
 
 var db = new Database(ArgumentParser.Get("--database"));
 
+PrometheusGenerator gen = new();
+await gen.GetMetrics();
+
 app.Run();

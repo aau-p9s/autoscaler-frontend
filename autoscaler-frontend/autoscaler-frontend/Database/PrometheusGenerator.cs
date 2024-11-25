@@ -8,7 +8,7 @@ class PrometheusGenerator {
     }
 
     public async Task<IEnumerable<Tuple<double, double>>> GetMetrics() {
-        var query = BuildQuery();
+        var query = BuildQuery("container_cpu_load_average_10s");
         List<Tuple<double, double>> result_list = new();
         HttpResponseMessage response;
         try {
@@ -50,9 +50,9 @@ class PrometheusGenerator {
         end:
         return result_list;
     }
-    public string BuildQuery() {
+    public string BuildQuery(string target) {
         var addr = ArgumentParser.Get("--prometheus-addr");
-        var baseQuery = $"{addr}/api/v1/query_range?query=container_network_receive_packets_total%7Bpod%3D~%22stregsystemet.%2A%22%7D";
+        var baseQuery = $"{addr}/api/v1/query_range?query={target}%7Bpod%3D~%22stregsystemet.%2A%22%7D";
         var timeNow = DateTime.Now;
         var time7DaysAgo = timeNow.AddDays(-7);
         return baseQuery + "&start=" + ToRFC3339(time7DaysAgo) + "&end=" + ToRFC3339(timeNow) + "&step=60s";

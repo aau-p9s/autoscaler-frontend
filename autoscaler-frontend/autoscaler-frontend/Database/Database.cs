@@ -3,7 +3,7 @@ using Microsoft.Data.Sqlite;
 
 class Database{
     readonly string Source;
-    SqliteConnection Connection;
+    readonly SqliteConnection Connection;
     public Database(string source){
         Source = source;
         Connection = new SqliteConnection($"Data Source={Source}");
@@ -68,6 +68,8 @@ class Database{
                 command.ExecuteNonQuery();
             }
             Console.WriteLine("Successfully fetched historical data");
+            // scale cluster
+             
             Thread.Sleep(15000);
         }
     }

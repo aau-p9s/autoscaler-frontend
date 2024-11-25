@@ -7,9 +7,9 @@ class PrometheusGenerator {
         client = new HttpClient();
     }
 
-    public async Task<IEnumerable<Tuple<double, int>>> GetMetrics() {
+    public async Task<IEnumerable<Tuple<double, double>>> GetMetrics() {
         var query = BuildQuery();
-        List<Tuple<double, int>> result_list = new();
+        List<Tuple<double, double>> result_list = new();
         HttpResponseMessage response;
         try {
             response = await client.GetAsync(query);
@@ -39,7 +39,7 @@ class PrometheusGenerator {
                     continue;
 
                 try{
-                    result_list.Add(new Tuple<double, int>((double)value[0], int.Parse((string)value[1])));
+                    result_list.Add(new Tuple<double, double>((double)value[0], double.Parse((string)value[1])));
                 }
                 catch(NullReferenceException e) {
                     Console.WriteLine(e);
@@ -49,7 +49,7 @@ class PrometheusGenerator {
         // todo: maybe let prometheus descide what max is if possible?
         end:
         var max = result_list.Count > 0 ? result_list.Select((_, e) => e).Max() : 1;
-        return result_list.Select((t, value) => new Tuple<double, int>(t.Item1, value/max * 100));
+        return result_list.Select((t, value) => new Tuple<double, double>(t.Item1, value/max * 100));
     }
     public string BuildQuery() {
         var addr = ArgumentParser.Get("--prometheus-addr");

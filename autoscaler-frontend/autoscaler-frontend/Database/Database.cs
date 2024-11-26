@@ -85,15 +85,20 @@ class Database{
                     "replicas",replicas
                 }}
             }};
-            using(var request = new HttpRequestMessage()) {
-                request.Method = HttpMethod.Patch;
-                request.RequestUri = new Uri($"{ArgumentParser.Get("--kube-api")}/apis/apps/v1/namespaces/default/deployments/{ArgumentParser.Get("--deployment")}/scale");
-                request.Content = new StringContent(JsonSerializer.Serialize(patchData), new MediaTypeHeaderValue("application/merge-patch+json"));
-                var response = await client.SendAsync(request);
-                if(response.StatusCode != System.Net.HttpStatusCode.OK) {
-                    Console.WriteLine(await response.Content.ReadAsStringAsync());
-                    Environment.Exit(1);
+            try {
+                using(var request = new HttpRequestMessage()) {
+                    request.Method = HttpMethod.Patch;
+                    request.RequestUri = new Uri($"{ArgumentParser.Get("--kube-api")}/apis/apps/v1/namespaces/default/deployments/{ArgumentParser.Get("--deployment")}/scale");
+                    request.Content = new StringContent(JsonSerializer.Serialize(patchData), new MediaTypeHeaderValue("application/merge-patch+json"));
+                    var response = await client.SendAsync(request);
+                    if(response.StatusCode != System.Net.HttpStatusCode.OK) {
+                        Console.WriteLine(await response.Content.ReadAsStringAsync());
+                        Environment.Exit(1);
+                    }
                 }
+            }
+            catch (HttpRequestException) {
+                Console.WriteLine("no api seems to be available, running offline...");
             }
             Thread.Sleep(int.Parse(ArgumentParser.Get("--period")));
         }

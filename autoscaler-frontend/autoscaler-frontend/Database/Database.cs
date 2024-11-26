@@ -1,9 +1,15 @@
 using System.Data;
+using System.IO.Compression;
+using System.Net.Http.Headers;
+using System.Net.Mime;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Data.Sqlite;
 
 class Database{
     readonly string Source;
-    SqliteConnection Connection;
+    readonly SqliteConnection Connection;
     public Database(string source){
         Source = source;
         Connection = new SqliteConnection($"Data Source={Source}");
@@ -30,7 +36,7 @@ class Database{
     public void Add(DateTime time, int value) {
         var command = Connection.CreateCommand();
         command.CommandText = @"
-            INSERT INTO historical(timestamp, amount) VALUES ($time, $amount)
+            INSERT INTO historical (timestamp, amount) VALUES ($time, $amount)
         ";
         command.Parameters.AddWithValue("$time", time);
         command.Parameters.AddWithValue("$amount", value);
@@ -53,12 +59,14 @@ class Database{
 
     async void UpdateThread() {
         var generator = new PrometheusGenerator();
+        HttpClient client = new();
         while(true) {
             var data = await generator.GetMetrics();
             foreach(var (timestamp, value) in data) {
                 var command = Connection.CreateCommand();
                 command.CommandText = @"
-                    INSERT INTO historical (timestamp, amount) VALUES (
+                    INSERT OR IGNORE INTO historical (id, timestamp, amount) VALUES (
+                        (SELECT id FROM historical WHERE strftime('%Y-%m-%d-%H:%M', timestamp) = strftime('%Y-%m-%d-%H:%M', $time)),
                         $time,
                         $amount
                     )
@@ -68,7 +76,26 @@ class Database{
                 command.ExecuteNonQuery();
             }
             Console.WriteLine("Successfully fetched historical data");
-            Thread.Sleep(15000);
+            // TODO: get ML results here, instead of hardcoding it
+            var replicas = 2;
+            // scale cluster
+            // get replicaset name
+            Dictionary<string, Dictionary<string, int>> patchData = new() {{
+                "spec", new() {{
+                    "replicas",replicas
+                }}
+            }};
+            using(var request = new HttpRequestMessage()) {
+                request.Method = HttpMethod.Patch;
+                request.RequestUri = new Uri($"{ArgumentParser.Get("--kube-api")}/apis/apps/v1/namespaces/default/deployments/{ArgumentParser.Get("--deployment")}/scale");
+                request.Content = new StringContent(JsonSerializer.Serialize(patchData), new MediaTypeHeaderValue("application/merge-patch+json"));
+                var response = await client.SendAsync(request);
+                if(response.StatusCode != System.Net.HttpStatusCode.OK) {
+                    Console.WriteLine(await response.Content.ReadAsStringAsync());
+                    Environment.Exit(1);
+                }
+            }
+            Thread.Sleep(int.Parse(ArgumentParser.Get("--period")));
         }
     }
 }

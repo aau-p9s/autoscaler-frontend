@@ -34,6 +34,7 @@ Forecaster.Singleton.Start();
 
 app.MapFallbackToFile("index.html");
 
+
 app.UseCors();
 app.UseEndpoints(endpoints => { endpoints.MapControllers().RequireCors("AllowSpecificOrigin"); });
 

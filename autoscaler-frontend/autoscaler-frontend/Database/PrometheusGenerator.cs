@@ -1,5 +1,6 @@
 using System.Net.Sockets;
 using System.Text.Json.Nodes;
+using System.Web;
 
 class PrometheusGenerator {
     private readonly HttpClient client;
@@ -7,9 +8,9 @@ class PrometheusGenerator {
         client = new HttpClient();
     }
 
-    public async Task<IEnumerable<Tuple<double, string>>> GetMetrics() {
-        var query = BuildQuery();
-        List<Tuple<double, string>> result_list = new();
+    public async Task<IEnumerable<Tuple<int, double>>> GetMetrics() {
+        var query = BuildQuery("sum(rate(container_cpu_usage_seconds_total{container=~\"stregsystemet\"}[1m]))/4*100");
+        List<Tuple<int, double>> result_list = new();
         HttpResponseMessage response;
         try {
             response = await client.GetAsync(query);
@@ -39,19 +40,21 @@ class PrometheusGenerator {
                     continue;
 
                 try{
-                    result_list.Add(new Tuple<double, string>((double)value[0], (string)value[1]));
+                    result_list.Add(new Tuple<int, double>((int)(double)value[0], double.Parse((string)value[1])));
                 }
                 catch(NullReferenceException e) {
                     Console.WriteLine(e);
                 }
             }
         }
+        // todo: maybe let prometheus descide what max is if possible?
         end:
         return result_list;
     }
-    public string BuildQuery() {
+    public string BuildQuery(string target) {
         var addr = ArgumentParser.Get("--prometheus-addr");
-        var baseQuery = $"{addr}/api/v1/query_range?query=container_network_receive_packets_total%7Bpod%3D~%22stregsystemet.%2A%22%7D";
+        var urlEncodedTarget = HttpUtility.UrlEncode(target);
+        var baseQuery = $"{addr}/api/v1/query_range?query={urlEncodedTarget}";
         var timeNow = DateTime.Now;
         var time7DaysAgo = timeNow.AddDays(-7);
         return baseQuery + "&start=" + ToRFC3339(time7DaysAgo) + "&end=" + ToRFC3339(timeNow) + "&step=60s";

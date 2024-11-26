@@ -85,8 +85,8 @@ class Database{
             using(var request = new HttpRequestMessage()) {
                 request.Method = HttpMethod.Patch;
                 request.RequestUri = new Uri("http://localhost:8001/apis/apps/v1/namespaces/default/deployments/stregsystemet-deployment/scale");
-                request.Headers.Add("Content-Type", "application/merge-patch+json");
                 request.Content = JsonContent.Create(patchData);
+                request.Content.Headers.Add("Content-Type", "application/merge-patch+json");
                 var response = await client.SendAsync(request);
                 if(response.StatusCode != System.Net.HttpStatusCode.OK) {
                     Console.WriteLine(await response.Content.ReadAsStringAsync());

@@ -30,7 +30,7 @@ class Database{
     public void Add(DateTime time, int value) {
         var command = Connection.CreateCommand();
         command.CommandText = @"
-            INSERT INTO historical(timestamp, amount) VALUES ($time, $amount)
+            INSERT INTO historical (timestamp, amount) VALUES ($time, $amount)
         ";
         command.Parameters.AddWithValue("$time", time);
         command.Parameters.AddWithValue("$amount", value);

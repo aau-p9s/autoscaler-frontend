@@ -1,5 +1,6 @@
 using System.Net.Sockets;
 using System.Text.Json.Nodes;
+using System.Web;
 
 class PrometheusGenerator {
     private readonly HttpClient client;
@@ -8,7 +9,7 @@ class PrometheusGenerator {
     }
 
     public async Task<IEnumerable<Tuple<double, double>>> GetMetrics() {
-        var query = BuildQuery("container_cpu_load_average_10s");
+        var query = BuildQuery("sum(rate(container_cpu_usage_seconds_total{container=~\"stregsystemet\"}[1m]))/4*100");
         List<Tuple<double, double>> result_list = new();
         HttpResponseMessage response;
         try {
@@ -52,7 +53,8 @@ class PrometheusGenerator {
     }
     public string BuildQuery(string target) {
         var addr = ArgumentParser.Get("--prometheus-addr");
-        var baseQuery = $"{addr}/api/v1/query_range?query={target}%7Bpod%3D~%22stregsystemet.%2A%22%7D";
+        var urlEncodedTarget = HttpUtility.UrlEncode(target);
+        var baseQuery = $"{addr}/api/v1/query_range?query={urlEncodedTarget}";
         var timeNow = DateTime.Now;
         var time7DaysAgo = timeNow.AddDays(-7);
         return baseQuery + "&start=" + ToRFC3339(time7DaysAgo) + "&end=" + ToRFC3339(timeNow) + "&step=60s";

@@ -1,6 +1,7 @@
 using System.Data;
 using System.IO.Compression;
 using System.Text.Json.Nodes;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Data.Sqlite;
 
 class Database{
@@ -81,11 +82,16 @@ class Database{
                     "replicas",replicas
                 }}
             }};
-            var patchResponse = await client.PatchAsJsonAsync($"http://localhost:8001/apis/apps/v1/namespaces/default/deployments/stregsystemet-deployment/scale", patchData);
-            if (patchResponse.StatusCode != System.Net.HttpStatusCode.OK) {
-                var responseData = await patchResponse.Content.ReadAsStringAsync();
-                Console.WriteLine(responseData);
-                Environment.Exit(1);
+            using(var request = new HttpRequestMessage()) {
+                request.Method = HttpMethod.Patch;
+                request.RequestUri = new Uri("http://localhost:8001/apis/apps/v1/namespaces/default/deployments/stregsystemet-deployment/scale");
+                request.Headers.Add("Content-Type", "application/merge-patch+json");
+                request.Content = JsonContent.Create(patchData);
+                var response = await client.SendAsync(request);
+                if(response.StatusCode != System.Net.HttpStatusCode.OK) {
+                    Console.WriteLine(await response.Content.ReadAsStringAsync());
+                    Environment.Exit(1);
+                }
             }
             Thread.Sleep(15000);
         }

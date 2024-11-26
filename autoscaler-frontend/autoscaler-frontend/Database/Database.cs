@@ -53,12 +53,14 @@ class Database{
 
     async void UpdateThread() {
         var generator = new PrometheusGenerator();
+        HttpClient client = new();
         while(true) {
             var data = await generator.GetMetrics();
             foreach(var (timestamp, value) in data) {
                 var command = Connection.CreateCommand();
                 command.CommandText = @"
-                    INSERT INTO historical (timestamp, amount) VALUES (
+                    INSERT OR IGNORE INTO historical (id, timestamp, amount) VALUES (
+                        (SELECT id FROM historical WHERE strftime('%Y-%m-%d-%H:%M', timestamp) = strftime('%Y-%m-%d-%H:%M', $time)),
                         $time,
                         $amount
                     )
@@ -68,8 +70,15 @@ class Database{
                 command.ExecuteNonQuery();
             }
             Console.WriteLine("Successfully fetched historical data");
+            // TODO: get ML results here, instead of hardcoding it
+            var replicas = 1
             // scale cluster
-             
+            // get replicaset name
+            var getResponse = client.Get("http://localhost:8001/apis/apps/v1/namespaces/default/replicasets")
+            
+            Console.WriteLine($"Scaling replicaset: {replicaset}");
+            client.Patch("")
+
             Thread.Sleep(15000);
         }
     }

@@ -8,9 +8,9 @@ class PrometheusGenerator {
         client = new HttpClient();
     }
 
-    public async Task<IEnumerable<Tuple<double, double>>> GetMetrics() {
+    public async Task<IEnumerable<Tuple<int, double>>> GetMetrics() {
         var query = BuildQuery("sum(rate(container_cpu_usage_seconds_total{container=~\"stregsystemet\"}[1m]))/4*100");
-        List<Tuple<double, double>> result_list = new();
+        List<Tuple<int, double>> result_list = new();
         HttpResponseMessage response;
         try {
             response = await client.GetAsync(query);
@@ -40,7 +40,7 @@ class PrometheusGenerator {
                     continue;
 
                 try{
-                    result_list.Add(new Tuple<double, double>((double)value[0], double.Parse((string)value[1])));
+                    result_list.Add(new Tuple<int, double>((int)(double)value[0], double.Parse((string)value[1])));
                 }
                 catch(NullReferenceException e) {
                     Console.WriteLine(e);

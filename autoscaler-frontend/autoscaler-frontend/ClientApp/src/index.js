@@ -6,6 +6,7 @@ import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 import reportWebVitals from './reportWebVitals';
 import TimePeriodGraph from "./components/TimePeriodGraph";
 import {Layout} from "./components/Layout";
+import ScaleSettings from "./components/CpuScalingFields";
 
 const baseUrl = document.getElementsByTagName('base')[0].getAttribute('href');
 const rootElement = document.getElementById('root');
@@ -15,6 +16,7 @@ root.render(
   <BrowserRouter basename={baseUrl}>
       <Layout>
         <TimePeriodGraph/>
+          <ScaleSettings/>
       </Layout>
   </BrowserRouter>);
 

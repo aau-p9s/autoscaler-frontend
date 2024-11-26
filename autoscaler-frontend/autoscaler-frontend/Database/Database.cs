@@ -1,4 +1,6 @@
 using System.Data;
+using System.IO.Compression;
+using System.Text.Json.Nodes;
 using Microsoft.Data.Sqlite;
 
 class Database{
@@ -71,14 +73,19 @@ class Database{
             }
             Console.WriteLine("Successfully fetched historical data");
             // TODO: get ML results here, instead of hardcoding it
-            var replicas = 1
+            var replicas = 1;
             // scale cluster
             // get replicaset name
-            var getResponse = client.Get("http://localhost:8001/apis/apps/v1/namespaces/default/replicasets")
+            var getResponse = await client.GetAsync("http://localhost:8001/apis/apps/v1/namespaces/default/replicasets");
+            var replicaset = (string)(await getResponse.Content.ReadFromJsonAsync<JsonObject>())["items"].AsArray().First(item => ((string)item["metadata"]["name"]).Contains("stregsystemet"))[0];
             
             Console.WriteLine($"Scaling replicaset: {replicaset}");
-            client.Patch("")
-
+            Dictionary<string, Dictionary<string, int>> patchData = new() {{
+                "spec", new() {{
+                    "replicas",1
+                }}
+            }};
+            await client.PatchAsJsonAsync($"http://localhost:8001/apis/apps/v1/namespaces/default/replicasets/{replicaset}/scale", patchData);
             Thread.Sleep(15000);
         }
     }

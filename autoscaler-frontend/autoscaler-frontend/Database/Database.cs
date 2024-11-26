@@ -87,7 +87,7 @@ class Database{
             }};
             using(var request = new HttpRequestMessage()) {
                 request.Method = HttpMethod.Patch;
-                request.RequestUri = new Uri("http://localhost:8001/apis/apps/v1/namespaces/default/deployments/stregsystemet-deployment/scale");
+                request.RequestUri = new Uri($"{ArgumentParser.Get("--kube-api")}/apis/apps/v1/namespaces/default/deployments/{ArgumentParser.Get("--deployment")}/scale");
                 request.Content = new StringContent(JsonSerializer.Serialize(patchData), new MediaTypeHeaderValue("application/merge-patch+json"));
                 var response = await client.SendAsync(request);
                 if(response.StatusCode != System.Net.HttpStatusCode.OK) {
@@ -95,7 +95,7 @@ class Database{
                     Environment.Exit(1);
                 }
             }
-            Thread.Sleep(15000);
+            Thread.Sleep(int.Parse(ArgumentParser.Get("--period")));
         }
     }
 }

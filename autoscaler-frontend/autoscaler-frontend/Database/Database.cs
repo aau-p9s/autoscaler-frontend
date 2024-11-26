@@ -2,6 +2,7 @@ using System.Data;
 using System.IO.Compression;
 using System.Net.Http.Headers;
 using System.Net.Mime;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Data.Sqlite;
@@ -87,9 +88,7 @@ class Database{
             using(var request = new HttpRequestMessage()) {
                 request.Method = HttpMethod.Patch;
                 request.RequestUri = new Uri("http://localhost:8001/apis/apps/v1/namespaces/default/deployments/stregsystemet-deployment/scale");
-                request.Content = JsonContent.Create(patchData);
-                request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/merge-patch+json");
-                request.Content.Headers.Add("Content-Type", "application/merge-patch+json");
+                request.Content = new StringContent(JsonSerializer.Serialize(patchData), new MediaTypeHeaderValue("application/merge-patch+json"));
                 var response = await client.SendAsync(request);
                 if(response.StatusCode != System.Net.HttpStatusCode.OK) {
                     Console.WriteLine(await response.Content.ReadAsStringAsync());

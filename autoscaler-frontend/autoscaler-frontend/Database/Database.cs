@@ -76,30 +76,17 @@ class Database{
             var replicas = 2;
             // scale cluster
             // get replicaset name
-            var getResponse = await client.GetAsync("http://localhost:8001/apis/apps/v1/namespaces/default/replicasets");
-            var replicasets = await getResponse.Content.ReadFromJsonAsync<JsonObject>();
-            if(replicasets == null)
-                goto end;
-
-            var items = replicasets["items"];
-            if(items == null)
-                goto end;
-            var itemsArray = items.AsArray();
-            var replicaset = (string)(itemsArray.First(item => ((string)(item["metadata"]["name"])).Contains("stregsystem"))["metadata"]["name"]);
-
-            Console.WriteLine($"Scaling replicaset: {replicaset}");
             Dictionary<string, Dictionary<string, int>> patchData = new() {{
                 "spec", new() {{
-                    "replicas",1
+                    "replicas",replicas
                 }}
             }};
-            var patchResponse = await client.PatchAsJsonAsync($"http://localhost:8001/apis/apps/v1/namespaces/default/replicasets/{replicaset}/scale", patchData);
+            var patchResponse = await client.PatchAsJsonAsync($"http://localhost:8001/apis/apps/v1/namespaces/default/deployments/stregsystemet-deployment/scale", patchData);
             if (patchResponse.StatusCode != System.Net.HttpStatusCode.OK) {
                 var responseData = await patchResponse.Content.ReadAsStringAsync();
                 Console.WriteLine(responseData);
                 Environment.Exit(1);
             }
-            end:
             Thread.Sleep(15000);
         }
     }

@@ -4,7 +4,9 @@ class ArgumentParser {
         {"--period", "604800000"}, // 1 week
         { "--scaler", "../../autoscaler/autoscaler.py" },
         {"--database", ":memory:"},
-        {"--prometheus-addr", "http://localhost:30000"}
+        {"--prometheus-addr", "http://localhost:30000"},
+        {"--deployment", "stregsystemet-deployment"},
+        {"--kube-api", "http://localhost:8001"}
     };
     public static void SetArgs(string[] args){
         for(int i = 0; i < args.Length; i++)

@@ -84,11 +84,12 @@ class Database{
             settings.ScalePeriod = oldSettings.ScalePeriod;
             
         command.CommandText = @"
-            UPDATE settings SET scaleup = $scaleup, scaledown = $scaledown, scaleperiod = $scaleperiod
+            UPDATE settings SET scaleup = $scaleup, scaledown = $scaledown, scaleperiod = $scaleperiod WHERE id = $id
         ";
         command.Parameters.AddWithValue("$scaleup", settings.ScaleUp);
         command.Parameters.AddWithValue("$scaledown", settings.ScaleDown);
         command.Parameters.AddWithValue("$scaleperiod", settings.ScalePeriod);
+        command.Parameters.AddWithValue("$id", settings.Id);
 
         command.ExecuteNonQuery();
 
@@ -98,13 +99,14 @@ class Database{
         var command = Connection.CreateCommand();
         Settings Settings = new();
         command.CommandText = @"
-            SELECT scaleup, scaledown, scaleperiod FROM settings
+            SELECT id, scaleup, scaledown, scaleperiod FROM settings
         ";
         using(var reader = command.ExecuteReader()) {
             reader.Read();
-            Settings.ScaleUp = reader.GetInt32(0);
-            Settings.ScaleDown = reader.GetInt32(1);
-            Settings.ScalePeriod = reader.GetInt32(2);
+            Settings.Id = reader.GetInt32(0);
+            Settings.ScaleUp = reader.GetInt32(1);
+            Settings.ScaleDown = reader.GetInt32(2);
+            Settings.ScalePeriod = reader.GetInt32(3);
             return Settings;
         }
     }

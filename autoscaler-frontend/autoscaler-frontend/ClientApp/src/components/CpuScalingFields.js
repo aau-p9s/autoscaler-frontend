@@ -6,6 +6,7 @@ const ScaleSettingsSidebar = () => {
     const [scaleUpPercentage, setScaleUpPercentage] = useState('');
     const [scaleDownPercentage, setScaleDownPercentage] = useState('');
     const [interval, setInterval] = useState('');
+    const [id, setId] = useState('')
     const [response, setResponse] = useState(null);
     const [error, setError] = useState(null);
 
@@ -19,9 +20,10 @@ const ScaleSettingsSidebar = () => {
                 }
                 const data = await res.json();
                 setCurrentValues(data);
-                setScaleUpPercentage(data.scaleUpPercentage || '');
-                setScaleDownPercentage(data.scaleDownPercentage || '');
-                setInterval(data.interval || '');
+                setScaleUpPercentage(data.scaleUp || '');
+                setScaleDownPercentage(data.scaleDown || '');
+                setId(data.id);
+                setInterval(data.scalePeriod || '');
             } catch (err) {
                 setError('Failed to fetch current values');
             }
@@ -33,13 +35,14 @@ const ScaleSettingsSidebar = () => {
         e.preventDefault();
 
         const payload = {
+            id: id,
             scaleUp: parseFloat(scaleUpPercentage),
             scaleDown: parseFloat(scaleDownPercentage),
             scalePeriod: parseInt(interval, 10),
         };
 
         try {
-            const res = await fetch('/api/scale-settings', {
+            const res = await fetch('http://localhost:5280/settings', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -51,9 +54,22 @@ const ScaleSettingsSidebar = () => {
                 throw new Error(`HTTP error! Status: ${res.status}`);
             }
 
-            const responseData = await res.json();
-            setResponse(responseData);
             setError(null);
+            try {
+                const res = await fetch('http://localhost:5280/settings');
+                if (!res.ok) {
+                    throw new Error(`HTTP error! Status: ${res.status}`);
+                }
+                const data = await res.json();
+                setCurrentValues(data);
+                setScaleUpPercentage(data.scaleUp || '');
+                setScaleDownPercentage(data.scaleDown || '');
+                setId(data.id);
+                setInterval(data.scalePeriod || '');
+            } catch (err) {
+                setError('Failed to fetch current values');
+            }
+            
         } catch (err) {
             setError('Failed to submit the settings');
             setResponse(null);
@@ -69,9 +85,9 @@ const ScaleSettingsSidebar = () => {
                 <h4>Current Values</h4>
                 {currentValues ? (
                     <>
-                        <p><strong>Current Scale Up:</strong> {currentValues.scaleUpPercentage}%</p>
-                        <p><strong>Current Scale Down:</strong> {currentValues.scaleDownPercentage}%</p>
-                        <p><strong>Current Interval:</strong> {currentValues.interval} ms</p>
+                        <p><strong>Current Scale Up:</strong> {currentValues.scaleUp}%</p>
+                        <p><strong>Current Scale Down:</strong> {currentValues.scaleDown}%</p>
+                        <p><strong>Current Interval:</strong> {currentValues.scalePeriod} ms</p>
                     </>
                 ) : (
                     <p>Loading current values...</p>

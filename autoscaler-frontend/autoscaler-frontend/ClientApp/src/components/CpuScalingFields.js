@@ -11,23 +11,24 @@ const ScaleSettingsSidebar = () => {
     const [error, setError] = useState(null);
 
     // Fetch current values from API when component mounts
-    useEffect(() => {
-        const fetchCurrentValues = async () => {
-            try {
-                const res = await fetch('http://localhost:5280/settings');
-                if (!res.ok) {
-                    throw new Error(`HTTP error! Status: ${res.status}`);
-                }
-                const data = await res.json();
-                setCurrentValues(data);
-                setScaleUpPercentage(data.scaleUp || '');
-                setScaleDownPercentage(data.scaleDown || '');
-                setId(data.id);
-                setInterval(data.scalePeriod || '');
-            } catch (err) {
-                setError('Failed to fetch current values');
+
+    const fetchCurrentValues = async () => {
+        try {
+            const res = await fetch('http://localhost:5280/settings');
+            if (!res.ok) {
+                throw new Error(`HTTP error! Status: ${res.status}`);
             }
-        };
+            const data = await res.json();
+            setCurrentValues(data);
+            setScaleUpPercentage(data.scaleUp || '');
+            setScaleDownPercentage(data.scaleDown || '');
+            setId(data.id);
+            setInterval(data.scalePeriod || '');
+        } catch (err) {
+            setError('Failed to fetch current values');
+        }
+    };
+    useEffect(() => {
         fetchCurrentValues();
     }, []);
 
@@ -55,21 +56,7 @@ const ScaleSettingsSidebar = () => {
             }
 
             setError(null);
-            try {
-                const res = await fetch('http://localhost:5280/settings');
-                if (!res.ok) {
-                    throw new Error(`HTTP error! Status: ${res.status}`);
-                }
-                const data = await res.json();
-                setCurrentValues(data);
-                setScaleUpPercentage(data.scaleUp || '');
-                setScaleDownPercentage(data.scaleDown || '');
-                setId(data.id);
-                setInterval(data.scalePeriod || '');
-            } catch (err) {
-                setError('Failed to fetch current values');
-            }
-            
+            fetchCurrentValues();
         } catch (err) {
             setError('Failed to submit the settings');
             setResponse(null);

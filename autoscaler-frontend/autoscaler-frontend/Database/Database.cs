@@ -8,11 +8,15 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Data.Sqlite;
 
 class Database{
-    readonly string Source;
+    readonly string Path;
     readonly SqliteConnection Connection;
-    public Database(string source){
-        Source = source;
-        Connection = new SqliteConnection($"Data Source={Source}");
+    public static Database Singleton = new(ArgumentParser.Get("--database"));
+    public Database(string path){
+        Path = path;
+        Connection = new SqliteConnection($"Data Source={Path}");
+    }
+
+    public void Init() {
         Connection.Open();
         var command = Connection.CreateCommand();
         command.CommandText = @"
@@ -26,8 +30,19 @@ class Database{
                 timestamp DATETIME NOT NULL,
                 amount INTEGER NOT NULL,
                 fetch_time DATETIME NOT NULL
-            )
+            );
+            CREATE TABLE IF NOT EXISTS settings (
+                id INTEGER PRIMARY KEY,
+                scaleup INTEGER NOT NULL,
+                scaledown INTEGER NOT NULL,
+                scaleperiod INTEGER NOT NULL,
+                UNIQUE(scaleup, scaledown, scaleperiod)
+            );
+
+            INSERT or IGNORE INTO settings (scaleup, scaledown, scaleperiod) VALUES (50, 20, 60000)
+
         ";
+            //INSERT OR IGNORE INTO settings (scaleup, scaledown, scaleperiod) VALUES ('0', '0', '0')
         command.ExecuteNonQuery();
 
         var thread = new Thread(UpdateThread);
@@ -55,6 +70,43 @@ class Database{
             }
         }
         return result;
+    }
+
+    public void SetSettings(Settings settings) {
+        var command = Connection.CreateCommand();
+        var oldSettings = GetSettings();
+
+        if (settings.ScaleUp == null)
+            settings.ScaleUp = oldSettings.ScaleUp;
+        if (settings.ScaleDown == null)
+            settings.ScaleDown = oldSettings.ScaleDown;
+        if (settings.ScalePeriod == null)
+            settings.ScalePeriod = oldSettings.ScalePeriod;
+            
+        command.CommandText = @"
+            UPDATE settings SET scaleup = $scaleup, scaledown = $scaledown, scaleperiod = $scaleperiod
+        ";
+        command.Parameters.AddWithValue("$scaleup", settings.ScaleUp);
+        command.Parameters.AddWithValue("$scaledown", settings.ScaleDown);
+        command.Parameters.AddWithValue("$scaleperiod", settings.ScalePeriod);
+
+        command.ExecuteNonQuery();
+
+    }
+
+    public Settings GetSettings() {
+        var command = Connection.CreateCommand();
+        Settings Settings = new();
+        command.CommandText = @"
+            SELECT scaleup, scaledown, scaleperiod FROM settings
+        ";
+        using(var reader = command.ExecuteReader()) {
+            reader.Read();
+            Settings.ScaleUp = reader.GetInt32(0);
+            Settings.ScaleDown = reader.GetInt32(1);
+            Settings.ScalePeriod = reader.GetInt32(2);
+            return Settings;
+        }
     }
 
     async void UpdateThread() {

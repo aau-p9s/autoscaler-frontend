@@ -1,12 +1,26 @@
 using autoscaler_frontend;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
 builder.Services.AddControllers();
-builder.Services.AddCors(options => {
-    options.AddPolicy("AllowSpecificOrigin", builder => {
+
+// Add Swagger services
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Version = "v1",
+        Title = "AutoScaler API",
+        Description = "API documentation for AutoScaler Frontend",
+    });
+});
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowSpecificOrigin", builder =>
+    {
         builder.WithOrigins("http://localhost:44411", "https://localhost:44411")
             .AllowAnyHeader()
             .AllowAnyMethod();
@@ -18,25 +32,33 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
+else
+{
+    // Enable Swagger in development environment
+    app.UseSwagger();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "AutoScaler API v1");
+        options.RoutePrefix = string.Empty; // Makes Swagger UI available at the root ("/")
+    });
+}
 
-//app.UseHttpsRedirection(); // why is this default?
 app.UseStaticFiles();
 app.UseRouting();
 
 ArgumentParser.SetArgs(args);
 
 Forecaster.Singleton.Start();
-
-//app.MapControllers();
-
-app.MapFallbackToFile("index.html");
-
+Database.Singleton.Init();
 
 app.UseCors();
-app.UseEndpoints(endpoints => { endpoints.MapControllers().RequireCors("AllowSpecificOrigin"); });
+
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapControllers().RequireCors("AllowSpecificOrigin");
+});
 
 var db = new Database(ArgumentParser.Get("--database"));
 

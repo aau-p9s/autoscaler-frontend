@@ -4,9 +4,7 @@ namespace autoscaler_frontend.Controllers;
 
 [ApiController]
 [Route("/forecast")]
-public class ForecastController : ControllerBase
-{
-
+public class ForecastController : ControllerBase {
     private readonly ILogger<ForecastController> _logger;
 
     public ForecastController(ILogger<ForecastController> logger)

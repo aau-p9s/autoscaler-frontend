@@ -1,9 +1,6 @@
 # Use an official .NET 7 SDK base image for ARM64
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS base
 
-# Set up environment variables for Node.js and Python
-ENV DEBIAN_FRONTEND=noninteractive
-
 # Update and install prerequisites
 RUN apt-get update && apt-get install -y \
     curl \

@@ -15,8 +15,9 @@ RUN dotnet restore -a arm64
 # Build and publish a release
 RUN dotnet publish autoscaler-frontend -c Release -o out
 
+
 # Build runtime image
-FROM mcr.microsoft.com/dotnet/aspnet:7.0
+FROM --platform=$TARGETPLATFORM mcr.microsoft.com/dotnet/aspnet:7.0
 WORKDIR /App
 COPY --from=build-env /App/out .
 COPY ./autoscaler/autoscaler.py .

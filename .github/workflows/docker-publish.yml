@@ -4,6 +4,8 @@ on:
   workflow_dispatch:
   push:
     branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 env:
   REGISTRY: ghcr.io
@@ -30,3 +32,5 @@ jobs:
         with:
           push: true
           tags: ghcr.io/aau-p9s/autoscaler-frontend:latest
+          platforms: 
+            linux/amd64

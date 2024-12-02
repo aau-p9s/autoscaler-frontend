@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build-env
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:7.0 AS build-env
 WORKDIR /App
 
 # Install Node.js
@@ -8,14 +8,14 @@ RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash - \
     && rm -rf /var/lib/apt/lists/*
 
     
-    # Copy everything
-    COPY ./autoscaler-frontend .
-    # Restore as distinct layers
-    RUN dotnet restore
-    # Build and publish a release
-    RUN dotnet publish autoscaler-frontend -c Release -o out
-    
-    # Build runtime image
+# Copy everything
+COPY ./autoscaler-frontend .
+# Restore as distinct layers
+RUN dotnet restore -a arm64
+# Build and publish a release
+RUN dotnet publish autoscaler-frontend -c Release -o out
+
+# Build runtime image
 FROM mcr.microsoft.com/dotnet/aspnet:7.0
 WORKDIR /App
 COPY --from=build-env /App/out .

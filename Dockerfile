@@ -1,24 +1,32 @@
-FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:7.0 AS build-env
-WORKDIR /App
+# Use an official .NET 7 SDK base image for ARM64
+FROM mcr.microsoft.com/dotnet/sdk:7.0 AS base
 
-# Install Node.js
+# Update and install prerequisites
+RUN apt-get update && apt-get install -y \
+    curl \
+    gnupg \
+    software-properties-common \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install Node.js 16.x
 RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash - \
-    && apt-get install -y \
-        nodejs \
-    && rm -rf /var/lib/apt/lists/*
+    && apt-get update && apt-get install -y nodejs \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-    
-# Copy everything
-COPY ./autoscaler-frontend .
-# Restore as distinct layers
-RUN dotnet restore -a arm64
-# Build and publish a release
-RUN dotnet publish autoscaler-frontend -c Release -o out
+# Install Python3
+RUN apt-get update && \
+    apt-get install -y python3 python3-pip && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
-# Build runtime image
-FROM mcr.microsoft.com/dotnet/aspnet:7.0
-WORKDIR /App
-COPY --from=build-env /App/out .
-COPY ./autoscaler/autoscaler.py .
-RUN apt-get update && apt-get -y install python3
-ENTRYPOINT ["dotnet", "autoscaler-frontend.dll", "--scaler", "./autoscaler.py"]
+# Verify installations
+RUN dotnet --version && node --version && python3 --version
+
+# Set the working directory
+WORKDIR /app
+
+COPY . /app
+
+
+CMD ["dotnet", "run", "--project", "autoscaler-frontend/autoscaler-frontend"]
+#["dotnet", "autoscaler-frontend.dll", "--scaler", "./autoscaler.py"]

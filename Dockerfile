@@ -1,35 +1,35 @@
-FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:7.0 AS build-env
-WORKDIR /App
+# Use an official .NET 7 SDK base image for ARM64
+FROM mcr.microsoft.com/dotnet/sdk:7.0 AS base
 
-# Install Node.js
+# Set up environment variables for Node.js and Python
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Update and install prerequisites
+RUN apt-get update && apt-get install -y \
+    curl \
+    gnupg \
+    software-properties-common \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install Node.js 16.x
 RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash - \
-    && apt-get install -y \
-        nodejs \
-    && rm -rf /var/lib/apt/lists/*
+    && apt-get update && apt-get install -y nodejs \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-    
-# Copy everything
-COPY ./autoscaler-frontend .
-# Restore as distinct layers
-RUN dotnet restore -a arm64
-# Build and publish a release
-RUN dotnet publish autoscaler-frontend -c Release -o out
+# Install Python3
+RUN apt-get update && \
+    apt-get install -y python3 python3-pip && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
+# Verify installations
+RUN dotnet --version && node --version && python3 --version
 
-# Build runtime image
-FROM --platform=$TARGETPLATFORM mcr.microsoft.com/dotnet/aspnet:7.0
-WORKDIR /App
-COPY --from=build-env /App/out .
-COPY ./autoscaler/autoscaler.py .
-RUN ls
+# Set the working directory
+WORKDIR /app
 
-ENV PYTHON_VERSION=3.11.6
-RUN wget https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION-linux-aarch64.tar.xz && \
-    tar -xf Python-$PYTHON_VERSION-linux-aarch64.tar.xz && \
-    mv Python-$PYTHON_VERSION /usr/local/python && \
-    ln -s /usr/local/python/bin/python3 /usr/bin/python3 && \
-    ln -s /usr/local/python/bin/pip3 /usr/bin/pip3 && \
-    rm Python-$PYTHON_VERSION-linux-aarch64.tar.xz
+COPY . /app
 
 
-ENTRYPOINT ["dotnet", "autoscaler-frontend.dll", "--scaler", "./autoscaler.py"]
+CMD ["dotnet", "run", "--project", "autoscaler-frontend/autoscaler-frontend"]
+#["dotnet", "autoscaler-frontend.dll", "--scaler", "./autoscaler.py"]

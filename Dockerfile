@@ -21,5 +21,14 @@ FROM --platform=$TARGETPLATFORM mcr.microsoft.com/dotnet/aspnet:7.0
 WORKDIR /App
 COPY --from=build-env /App/out .
 COPY ./autoscaler/autoscaler.py .
-RUN apt-get update && apt-get -y install python3
+
+ENV PYTHON_VERSION=3.11.6
+RUN wget https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION-linux-aarch64.tar.xz && \
+    tar -xf Python-$PYTHON_VERSION-linux-aarch64.tar.xz && \
+    mv Python-$PYTHON_VERSION /usr/local/python && \
+    ln -s /usr/local/python/bin/python3 /usr/bin/python3 && \
+    ln -s /usr/local/python/bin/pip3 /usr/bin/pip3 && \
+    rm Python-$PYTHON_VERSION-linux-aarch64.tar.xz
+
+
 ENTRYPOINT ["dotnet", "autoscaler-frontend.dll", "--scaler", "./autoscaler.py"]

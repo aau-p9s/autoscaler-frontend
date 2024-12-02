@@ -21,6 +21,7 @@ FROM --platform=$TARGETPLATFORM mcr.microsoft.com/dotnet/aspnet:7.0
 WORKDIR /App
 COPY --from=build-env /App/out .
 COPY ./autoscaler/autoscaler.py .
+RUN ls
 
 ENV PYTHON_VERSION=3.11.6
 RUN wget https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION-linux-aarch64.tar.xz && \

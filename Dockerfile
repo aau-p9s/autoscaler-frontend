@@ -4,7 +4,7 @@ COPY ./autoscaler-frontend/autoscaler-frontend .
 
 COPY ./autoscaler/autoscaler.py .
 
-EXPOSE 44411
+EXPOSE 8080
 
 # Install Python
 RUN apt-get update && \

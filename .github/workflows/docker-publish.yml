@@ -38,5 +38,4 @@ jobs:
           push: true
           tags: ghcr.io/aau-p9s/autoscaler-frontend:latest
           platforms: 
-            linux/amd64
             linux/arm64

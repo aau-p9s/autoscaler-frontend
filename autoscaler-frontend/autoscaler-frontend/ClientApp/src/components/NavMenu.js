@@ -8,17 +8,7 @@ export class NavMenu extends Component {
 
   constructor(props) {
     super(props);
-
-    this.toggleNavbar = this.toggleNavbar.bind(this);
-    this.state = {
-      collapsed: true,
-    };
-  }
-
-  toggleNavbar() {
-    this.setState({
-      collapsed: !this.state.collapsed,
-    });
+    
   }
 
   render() {
@@ -32,8 +22,6 @@ export class NavMenu extends Component {
             <NavbarBrand tag={Link} to="/">
               Forecast
             </NavbarBrand>
-            <NavbarToggler onClick={this.toggleNavbar} className="mr-2" />
-            <Collapse className="d-sm-inline-flex flex-sm-row-reverse" isOpen={!this.state.collapsed} navbar>
               <ul className="navbar-nav flex-grow">
                 <NavItem>
                   <NavLink tag={Link} className="text-dark" to="/">
@@ -41,7 +29,6 @@ export class NavMenu extends Component {
                   </NavLink>
                 </NavItem>
               </ul>
-            </Collapse>
           </Navbar>
         </header>
     );

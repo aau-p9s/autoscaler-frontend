@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 from time import sleep
 from json import dumps
 from random import randint

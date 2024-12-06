@@ -1,0 +1,8 @@
+{
+"SpaProxyServer": {
+"ServerUrl": "https://localhost:44411",
+"LaunchCommand": "npm start",
+"WorkingDirectory": "/Users/jonathanwisborgfog/Documents/9.semester/projekt/autoscaler-frontend/ClientApp/",
+"MaxTimeoutInSeconds": "120"
+}
+}

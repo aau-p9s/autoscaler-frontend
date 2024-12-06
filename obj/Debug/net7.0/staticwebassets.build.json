@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "X6qehLBqMlqwCyEqChgQaZtSKvNvuA5R14WjEkLMq8c=",
+  "Source": "autoscaler-frontend",
+  "BasePath": "_content/autoscaler-frontend",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}

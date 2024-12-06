@@ -122,7 +122,7 @@ const TimePeriodGraph = () => {
     };
 
     return (
-        <div style={{ width: '80%', height: '400px', margin: '0 auto' }}>
+        <div style={{ width: '80%', height: '800px', margin: '0 auto' }}>
             <Line ref={chartRef} data={chartData} options={options} />
             <div
                 style={{
@@ -132,17 +132,6 @@ const TimePeriodGraph = () => {
                     alignItems: 'center',
                 }}
             >
-                <div>
-                    <button onClick={() => handleTimePeriodChange('hour')} style={buttonStyle}>
-                        Next Hour
-                    </button>
-                    <button onClick={() => handleTimePeriodChange('day')} style={buttonStyle}>
-                        Next Day
-                    </button>
-                    <button onClick={() => handleTimePeriodChange('week')} style={buttonStyle}>
-                        Next Week
-                    </button>
-                </div>
                 <div>
                     <button onClick={toggleDragMode} style={buttonStyle}>
                         {dragEnabled ? 'Disable Modify' : 'Modify'}

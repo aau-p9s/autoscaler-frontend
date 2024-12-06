@@ -1,16 +1,33 @@
-FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
+# Build stage
+FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build-env
+WORKDIR /App
 
-COPY ./autoscaler-frontend/autoscaler-frontend .
+# Copy everything
+COPY ./autoscaler-frontend .
+# Restore as distinct layers
+RUN dotnet restore
 
-COPY ./autoscaler/autoscaler.py .
-
-EXPOSE 8080
-
-# Install Python
-RUN apt-get update && \
-    apt-get install -y python3 python3-pip && \
+# Install Node.js
+RUN apt-get update && apt-get install -y python3 curl && \
+    curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
+    apt-get install -y nodejs && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN dotnet build
+# Build and publish a release
+RUN dotnet publish autoscaler-frontend -c Release -o out
 
-CMD ["dotnet", "run", "--scaler", "./autoscaler.py"]
+# Runtime stage
+FROM mcr.microsoft.com/dotnet/aspnet:7.0
+WORKDIR /App
+
+# Install Node.js
+RUN apt-get update && apt-get install -y python3 curl && \
+    curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
+    apt-get install -y nodejs && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Copy application files
+COPY --from=build-env /App/out .
+COPY ./autoscaler/autoscaler.py .
+
+ENTRYPOINT ["dotnet", "autoscaler-frontend.dll", "--scaler", "./autoscaler.py"]

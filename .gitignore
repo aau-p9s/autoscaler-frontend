@@ -6,3 +6,5 @@ venv
 # sqlite
 *.db3
 *.db
+
+.vscode

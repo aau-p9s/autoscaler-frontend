@@ -9,7 +9,7 @@ class PrometheusGenerator {
     }
 
     public async Task<IEnumerable<Tuple<int, double>>> GetMetrics() {
-        var query = BuildQuery("sum(rate(container_cpu_usage_seconds_total{container=~\"stregsystemet\"}[1m]))/4*100");
+        var query = BuildQuery("sum(rate(container_cpu_usage_seconds_total{container=~\"stregsystemet\"}[5m]))/4*100");
         Console.WriteLine(query);
         List<Tuple<int, double>> result_list = new();
         HttpResponseMessage response;

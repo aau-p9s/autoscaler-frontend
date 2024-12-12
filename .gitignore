@@ -8,3 +8,4 @@ venv
 *.db
 
 .vscode
+out

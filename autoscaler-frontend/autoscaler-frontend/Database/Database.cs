@@ -6,6 +6,7 @@ using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using autoscaler_frontend;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Data.Sqlite;
 
@@ -113,8 +114,23 @@ class Database{
         }
     }
 
+    public Dictionary<DateTime, int> AllHistorical() {
+        var command = Connection.CreateCommand();
+        command.CommandText = @"
+            SELECT timestamp, amount FROM historical
+        ";
+        Dictionary<DateTime, int> result = new();
+        using(var reader = command.ExecuteReader()) {
+            while(reader.Read()) {
+                result[reader.GetDateTime(0)] = reader.GetInt32(1);
+            }
+        }
+        return result;
+    }
+
     async void UpdateThread() {
         var generator = new PrometheusGenerator();
+        var forecast = Forecaster.Singleton.NextForecast();
         while(true) {
             var data = await generator.GetMetrics();
             foreach(var (timestamp, value) in data) {
@@ -130,8 +146,6 @@ class Database{
                 command.Parameters.AddWithValue("amount", value);
                 command.ExecuteNonQuery();
             }
-            Console.WriteLine("Successfully fetched historical data");
-            Console.WriteLine("removing old data");
             using(var command = Connection.CreateCommand()) {
                 command.CommandText = @"
                     DELETE FROM historical where
@@ -142,9 +156,14 @@ class Database{
                 ";
                 command.ExecuteNonQuery();
             }
-            // TODO: get ML results here, instead of hardcoding it
-            var replicas = 2;
-            // scale cluster
+            var settings = GetSettings();
+            // TODO: fix hardcoded replica count
+            var replicas = 1;
+            if(forecast.Amount > settings.ScaleUp)
+                replicas++;
+            if(forecast.Amount <= settings.ScaleDown && forecast.Amount > 1)
+                replicas--;
+
             // get replicaset name
             Dictionary<string, Dictionary<string, int>> patchData = new() {{
                 "spec", new() {{
@@ -161,17 +180,19 @@ class Database{
                     return true;
                 };
                 HttpClient client = new(handler);
-                StreamReader stream = new("/var/run/secrets/kubernetes.io/serviceaccount/token");
-                Console.WriteLine("Reading token");
-                string token = stream.ReadToEnd();
+                string token;
+                if(!File.Exists("/var/run/secrets/kubernetes.io/serviceaccount/token"))
+                    token = "";
+                else {
+                    StreamReader stream = new("/var/run/secrets/kubernetes.io/serviceaccount/token");
+                    token = stream.ReadToEnd();
+                }
                 using(var request = new HttpRequestMessage()) {
                     request.Method = HttpMethod.Patch;
                     request.RequestUri = new Uri($"{ArgumentParser.Get("--kube-api")}/apis/apps/v1/namespaces/default/deployments/{ArgumentParser.Get("--deployment")}/scale");
                     request.Content = new StringContent(JsonSerializer.Serialize(patchData), new MediaTypeHeaderValue("application/merge-patch+json"));
                     request.Headers.Add("Authorization", $"Bearer {token}");
-                    Console.WriteLine("Created request");
                     var response = await client.SendAsync(request);
-                    Console.WriteLine("kube api response: " + await response.Content.ReadAsStringAsync());
                     if(response.StatusCode != System.Net.HttpStatusCode.OK) {
                         Console.WriteLine(await response.Content.ReadAsStringAsync());
                         Environment.Exit(1);
@@ -180,11 +201,11 @@ class Database{
             }
             catch (HttpRequestException e) {
                 Console.WriteLine("no api seems to be available, running offline...");
-                Console.WriteLine(e.Message);
-                if(e.InnerException != null)
-                    Console.WriteLine(e.InnerException.Message);
             }
-            Thread.Sleep(int.Parse(ArgumentParser.Get("--period")));
+            forecast = Forecaster.Singleton.NextForecast();
+            var delay = (forecast.Timestamp - DateTime.Now).TotalMilliseconds;
+            if(forecast.Timestamp > DateTime.Now)
+                Thread.Sleep((int)delay);
         }
     }
 }

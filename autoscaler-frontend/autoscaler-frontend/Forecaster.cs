@@ -1,23 +1,25 @@
 using System.Diagnostics;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 
 namespace autoscaler_frontend;
 
-
+public class Forecast {
+    public readonly int Amount;
+    public readonly DateTime Timestamp;
+    public Forecast(int amount, DateTime timestamp) {
+        Amount = amount;
+        Timestamp = timestamp;
+    }
+}
 
 public class Forecaster
 {
-    private Thread Scaler;
     private Dictionary<DateTime, int> Predictions = new();
 
     public static Forecaster Singleton = new();
     public Forecaster() {
-        Scaler = new Thread(Run);
     }
-    public void Start() {
-        Scaler.Start();
-    }
-
 
     public Dictionary<DateTime, int> Prediction() {
         var now = DateTime.Now;
@@ -39,23 +41,33 @@ public class Forecaster
         return final;
     }
 
+    public Forecast NextForecast() {
+        Console.WriteLine($"Count: {Predictions.Count}");
+        if(Predictions.Count == 0) 
+            Run();
+        var next = Predictions.Min(date => date.Key);
+        var forecast = new Forecast(Predictions[next], next);
+        Predictions.Remove(next);
+        return forecast;
+    }
+
     private void Run() {
-        while(true) {
-            // get predictions
-            Process Predicter = new();
-            Predicter.StartInfo.RedirectStandardOutput = true;
-            Predicter.StartInfo.FileName = ArgumentParser.Get("--scaler");
-            Predicter.Start();
-            var line = Predicter.StandardOutput.ReadLine();
-            if (line == null) continue;
-
-            var data = System.Text.Json.JsonSerializer.Deserialize<JsonArray>(line);
-            if (data == null) continue;
-
-            foreach(var (time, value) in data.Select(item => new Tuple<DateTime, int>(DateTime.Parse((string)item["time"]), (int)item["value"]))) {
-                Predictions[time] = value;
-            }
-            Thread.Sleep(int.Parse(ArgumentParser.Get("--period")));
+        // get predictions
+        Process Predicter = new();
+        Predicter.StartInfo.RedirectStandardOutput = true;
+        Predicter.StartInfo.RedirectStandardInput = true;
+        Predicter.StartInfo.FileName = ArgumentParser.Get("--scaler");
+        Predicter.Start();
+        var historical = Database.Singleton.AllHistorical();
+        Predicter.StandardInput.WriteLine(JsonSerializer.Serialize(historical));
+        var line = Predicter.StandardOutput.ReadLine();
+        if (line == null) return;
+        var data = JsonSerializer.Deserialize<JsonArray>(line);
+        if (data == null) return;
+        Dictionary<DateTime, int> newPredictions = new();
+        foreach(var (time, value) in data.Select(item => new Tuple<DateTime, int>(DateTime.Parse((string)item["time"]), (int)item["value"]))) {
+            newPredictions[time] = value;
         }
+        Predictions = newPredictions;
     }
 }

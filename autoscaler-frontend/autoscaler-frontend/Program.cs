@@ -52,7 +52,6 @@ app.UseRouting();
 
 ArgumentParser.SetArgs(args);
 
-Forecaster.Singleton.Start();
 Database.Singleton.Init();
 
 app.UseCors();
@@ -61,6 +60,7 @@ app.UseEndpoints(endpoints =>
 {
     endpoints.MapControllers().RequireCors("AllowSpecificOrigin");
 });
+
 
 var db = new Database(ArgumentParser.Get("--database"));
 

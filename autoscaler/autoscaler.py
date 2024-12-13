@@ -5,8 +5,8 @@ from random import randint
 import datetime
 import sys
 
-historic = loads(sys.stdin.readline())
-sys.stderr.write(f"{historic}\n")
+#historic = loads(sys.stdin.readline())
+#sys.stderr.write(f"{historic}\n")
 # TODO: Machine learning
 # End Machine learning
 

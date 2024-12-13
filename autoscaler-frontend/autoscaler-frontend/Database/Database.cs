@@ -2,6 +2,8 @@ using System.Data;
 using System.IO.Compression;
 using System.Net.Http.Headers;
 using System.Net.Mime;
+using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -113,7 +115,11 @@ class Database{
 
     async void UpdateThread() {
         var generator = new PrometheusGenerator();
-        HttpClient client = new();
+        HttpClientHandler handler = new();
+        handler.ClientCertificateOptions = ClientCertificateOption.Manual;
+        handler.SslProtocols = SslProtocols.Tls12;
+        handler.ClientCertificates.Add(new X509Certificate2(X509Certificate2.CreateFromCertFile("/var/run/secrets/kubernetes.io/serviceaccount/ca.crt")));
+        HttpClient client = new(handler);
         while(true) {
             var data = await generator.GetMetrics();
             foreach(var (timestamp, value) in data) {
@@ -140,10 +146,13 @@ class Database{
                 }}
             }};
             try {
+                StreamReader stream = new("/var/run/secrets/kubernetes.io/serviceaccount/token");
+                string token = stream.ReadToEnd();
                 using(var request = new HttpRequestMessage()) {
                     request.Method = HttpMethod.Patch;
                     request.RequestUri = new Uri($"{ArgumentParser.Get("--kube-api")}/apis/apps/v1/namespaces/default/deployments/{ArgumentParser.Get("--deployment")}/scale");
                     request.Content = new StringContent(JsonSerializer.Serialize(patchData), new MediaTypeHeaderValue("application/merge-patch+json"));
+                    request.Headers.Add("Authorization", $"Bearer {token}");
                     var response = await client.SendAsync(request);
                     if(response.StatusCode != System.Net.HttpStatusCode.OK) {
                         Console.WriteLine(await response.Content.ReadAsStringAsync());

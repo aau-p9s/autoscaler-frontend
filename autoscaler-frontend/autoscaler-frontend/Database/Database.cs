@@ -131,6 +131,17 @@ class Database{
                 command.ExecuteNonQuery();
             }
             Console.WriteLine("Successfully fetched historical data");
+            Console.WriteLine("removing old data");
+            using(var command = Connection.CreateCommand()) {
+                command.CommandText = @"
+                    DELETE FROM historical where
+                        timestamp <= date('now','-7 day');
+
+                    DELETE FROM forecasts where
+                        timestamp <= date('now');
+                ";
+                command.ExecuteNonQuery();
+            }
             // TODO: get ML results here, instead of hardcoding it
             var replicas = 2;
             // scale cluster

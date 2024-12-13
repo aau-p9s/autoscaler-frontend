@@ -161,7 +161,7 @@ class Database{
             var replicas = 1;
             if(forecast.Amount > settings.ScaleUp)
                 replicas++;
-            if(forecast.Amount <= settings.ScaleDown && forecast.Amount > 1)
+            if(forecast.Amount <= settings.ScaleDown && replicas > 1)
                 replicas--;
 
             // get replicaset name

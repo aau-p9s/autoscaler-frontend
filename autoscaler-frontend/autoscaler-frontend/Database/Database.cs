@@ -141,9 +141,11 @@ class Database{
                 }}
             }};
             try {
-                HttpClientHandler handler = new();
-                handler.ClientCertificateOptions = ClientCertificateOption.Manual;
-                handler.SslProtocols = SslProtocols.Tls12;
+                HttpClientHandler handler = new()
+                {
+                    ClientCertificateOptions = ClientCertificateOption.Manual,
+                    SslProtocols = SslProtocols.Tls12
+                };
                 handler.ClientCertificates.Add(new X509Certificate2(X509Certificate2.CreateFromCertFile("/var/run/secrets/kubernetes.io/serviceaccount/ca.crt")));
                 Console.WriteLine("created handler");
                 HttpClient client = new(handler);
@@ -167,6 +169,8 @@ class Database{
             catch (HttpRequestException e) {
                 Console.WriteLine("no api seems to be available, running offline...");
                 Console.WriteLine(e.Message);
+                if(e.InnerException != null)
+                    Console.WriteLine(e.InnerException.Message);
             }
             Thread.Sleep(int.Parse(ArgumentParser.Get("--period")));
         }

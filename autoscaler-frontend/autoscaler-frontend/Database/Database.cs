@@ -141,13 +141,14 @@ class Database{
                 }}
             }};
             try {
-                HttpClientHandler handler = new()
+                HttpClientHandler handler = new();
+                handler.ClientCertificateOptions = ClientCertificateOption.Manual;
+                // TODO: Handle actual certificate
+                handler.ServerCertificateCustomValidationCallback = 
+                    (httpRequestMessage, cert, cetChain, policyErrors) =>
                 {
-                    ClientCertificateOptions = ClientCertificateOption.Manual,
-                    SslProtocols = SslProtocols.Tls12
+                    return true;
                 };
-                handler.ClientCertificates.Add(new X509Certificate2(X509Certificate2.CreateFromCertFile("/var/run/secrets/kubernetes.io/serviceaccount/ca.crt")));
-                Console.WriteLine("created handler");
                 HttpClient client = new(handler);
                 StreamReader stream = new("/var/run/secrets/kubernetes.io/serviceaccount/token");
                 Console.WriteLine("Reading token");

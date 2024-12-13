@@ -44,7 +44,7 @@ class PrometheusGenerator {
                     result_list.Add(new Tuple<int, double>((int)(double)value[0], double.Parse((string)value[1])));
                 }
                 catch(NullReferenceException e) {
-                    Console.WriteLine(e);
+                    Console.WriteLine("nullreferenceexception: " + e);
                 }
             }
         }

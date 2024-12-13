@@ -14,7 +14,7 @@ const ScaleSettingsSidebar = () => {
 
     const fetchCurrentValues = async () => {
         try {
-            const res = await fetch('http://localhost:5280/settings');
+            const res = await fetch('/settings');
             if (!res.ok) {
                 throw new Error(`HTTP error! Status: ${res.status}`);
             }
@@ -43,7 +43,7 @@ const ScaleSettingsSidebar = () => {
         };
 
         try {
-            const res = await fetch('http://localhost:5280/settings', {
+            const res = await fetch('/settings', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

@@ -2,6 +2,8 @@ using System.Data;
 using System.IO.Compression;
 using System.Net.Http.Headers;
 using System.Net.Mime;
+using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -113,7 +115,6 @@ class Database{
 
     async void UpdateThread() {
         var generator = new PrometheusGenerator();
-        HttpClient client = new();
         while(true) {
             var data = await generator.GetMetrics();
             foreach(var (timestamp, value) in data) {
@@ -140,19 +141,37 @@ class Database{
                 }}
             }};
             try {
+                HttpClientHandler handler = new();
+                handler.ClientCertificateOptions = ClientCertificateOption.Manual;
+                // TODO: Handle actual certificate
+                handler.ServerCertificateCustomValidationCallback = 
+                    (httpRequestMessage, cert, cetChain, policyErrors) =>
+                {
+                    return true;
+                };
+                HttpClient client = new(handler);
+                StreamReader stream = new("/var/run/secrets/kubernetes.io/serviceaccount/token");
+                Console.WriteLine("Reading token");
+                string token = stream.ReadToEnd();
                 using(var request = new HttpRequestMessage()) {
                     request.Method = HttpMethod.Patch;
                     request.RequestUri = new Uri($"{ArgumentParser.Get("--kube-api")}/apis/apps/v1/namespaces/default/deployments/{ArgumentParser.Get("--deployment")}/scale");
                     request.Content = new StringContent(JsonSerializer.Serialize(patchData), new MediaTypeHeaderValue("application/merge-patch+json"));
+                    request.Headers.Add("Authorization", $"Bearer {token}");
+                    Console.WriteLine("Created request");
                     var response = await client.SendAsync(request);
+                    Console.WriteLine("kube api response: " + await response.Content.ReadAsStringAsync());
                     if(response.StatusCode != System.Net.HttpStatusCode.OK) {
                         Console.WriteLine(await response.Content.ReadAsStringAsync());
                         Environment.Exit(1);
                     }
                 }
             }
-            catch (HttpRequestException) {
+            catch (HttpRequestException e) {
                 Console.WriteLine("no api seems to be available, running offline...");
+                Console.WriteLine(e.Message);
+                if(e.InnerException != null)
+                    Console.WriteLine(e.InnerException.Message);
             }
             Thread.Sleep(int.Parse(ArgumentParser.Get("--period")));
         }

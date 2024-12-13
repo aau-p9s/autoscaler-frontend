@@ -9,7 +9,8 @@ class PrometheusGenerator {
     }
 
     public async Task<IEnumerable<Tuple<int, double>>> GetMetrics() {
-        var query = BuildQuery("sum(rate(container_cpu_usage_seconds_total{container=~\"stregsystemet\"}[1m]))/4*100");
+        var query = BuildQuery("sum(rate(container_cpu_usage_seconds_total{container=~\"stregsystemet\"}[5m]))/4*100");
+        Console.WriteLine(query);
         List<Tuple<int, double>> result_list = new();
         HttpResponseMessage response;
         try {
@@ -43,7 +44,7 @@ class PrometheusGenerator {
                     result_list.Add(new Tuple<int, double>((int)(double)value[0], double.Parse((string)value[1])));
                 }
                 catch(NullReferenceException e) {
-                    Console.WriteLine(e);
+                    Console.WriteLine("nullreferenceexception: " + e);
                 }
             }
         }

@@ -140,6 +140,7 @@ class Database{
                     DELETE FROM forecasts where
                         timestamp <= date('now');
                 ";
+                command.ExecuteNonQuery();
             }
             // TODO: get ML results here, instead of hardcoding it
             var replicas = 2;

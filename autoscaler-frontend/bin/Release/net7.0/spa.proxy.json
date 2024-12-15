@@ -1,8 +1,0 @@
-{
-"SpaProxyServer": {
-"ServerUrl": "https://localhost:44411",
-"LaunchCommand": "npm start",
-"WorkingDirectory": "/home/mast3r/git/p9/autoscaler-frontend/autoscaler-frontend/autoscaler-frontend/ClientApp/",
-"MaxTimeoutInSeconds": "120"
-}
-}

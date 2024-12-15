@@ -12,6 +12,7 @@
         <SpaProxyLaunchCommand>npm start</SpaProxyLaunchCommand>
         <RootNamespace>autoscaler_frontend</RootNamespace>
         <ImplicitUsings>enable</ImplicitUsings>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>   
     </PropertyGroup>
 
     <ItemGroup>

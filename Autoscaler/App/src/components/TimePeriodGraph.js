@@ -55,7 +55,6 @@ const TimePeriodGraph = () => {
             if (json && Object.keys(json).length > 0) {
                 const labels = Object.keys(json);
                 const data = Object.values(json);
-                //sort it by time
                 labels.sort((a, b) => new Date(a) - new Date(b));
                 setChartData({
                     labels,
@@ -86,8 +85,7 @@ const TimePeriodGraph = () => {
             }
         } catch (error) {
             console.error("Error fetching data:", error);
-
-            // Fallback to generated data in case of error
+            
             const fallbackData = await generateData("hour");
             setChartData({
                 labels: fallbackData.labels || [],
@@ -188,7 +186,6 @@ const TimePeriodGraph = () => {
         } catch (error) {
             console.error('Error:', error);
         }
-        await fetchData();
     };
 
     const toggleDragMode = () => {

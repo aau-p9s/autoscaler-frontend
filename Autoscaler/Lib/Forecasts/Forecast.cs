@@ -1,4 +1,4 @@
-class Forecast {
+public class Forecast {
     public readonly DateTime Timestamp;
     public readonly int Value;
 

@@ -1,3 +1,4 @@
+using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Autoscaler.Lib.Autoscaler;
@@ -30,16 +31,18 @@ class Kubernetes {
     //public JsonObject Recv(Uri uri) {
     //}
 
-    public void Patch(string endpoint, object body) {
+    public async void Patch(string endpoint, object body) {
+        Console.WriteLine(Addr + endpoint);
         try{
             var request = new HttpRequestMessage {
                 Method = HttpMethod.Patch,
                 RequestUri = new Uri(Addr + endpoint),
-                Content = new StringContent(JsonSerializer.Serialize(body))
+                Content = new StringContent(JsonSerializer.Serialize(body), new MediaTypeHeaderValue("application/merge-patch+json"))
             };
             if (authHeader != null)
                 request.Headers.Add(authHeader.Item1, authHeader.Item2);
-            client.SendAsync(request);
+            var response = await client.SendAsync(request);
+            Console.WriteLine(response.StatusCode);
         }
         catch(HttpRequestException e) {
             Console.WriteLine("no api seems to be available, running offline...");
@@ -47,5 +50,33 @@ class Kubernetes {
             if(e.InnerException != null)
                 Console.WriteLine(e.InnerException.Message);
         }
+    }
+    public async Task<int> Replicas(string deployment) {
+        var request = new HttpRequestMessage {
+            Method = HttpMethod.Get,
+            RequestUri = new Uri(Addr + $"/apis/apps/v1/namespaces/default/deployments/{deployment}/scale"),
+            
+        };
+        if(authHeader != null)
+            request.Headers.Add(authHeader.Item1, authHeader.Item2);
+        HttpResponseMessage response;
+        try {
+            response = await client.SendAsync(request);
+        }
+        catch(HttpRequestException e) {
+            Console.WriteLine("kubernetes seems to be down...");
+            return 0;
+        }
+        var json = await response.Content.ReadFromJsonAsync<JsonObject>();
+        if (json == null)
+            return 0;
+        var spec = json["spec"];
+        if(spec == null)
+            return 0;
+        var replicasObj = spec["replicas"];
+        if (replicasObj == null)
+            return 0;
+        var replicas = (int)replicasObj;
+        return replicas;
     }
 }

@@ -6,6 +6,7 @@ using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using autoscaler_frontend;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Data.Sqlite;
 
@@ -110,6 +111,19 @@ public class Database {
             Settings.ScalePeriod = reader.GetInt32(3);
             return Settings;
         }
+    }
+    public Dictionary<DateTime, int> AllHistorical() {
+        var command = Connection.CreateCommand();
+        command.CommandText = @"
+            SELECT timestamp, amount FROM historical
+        ";
+        Dictionary<DateTime, int> result = new();
+        using(var reader = command.ExecuteReader()) {
+            while(reader.Read()) {
+                result[reader.GetDateTime(0)] = reader.GetInt32(1);
+            }
+        }
+        return result;
     }
 
     public void InsertHistorical(IEnumerable<Tuple<int, double>> data) {

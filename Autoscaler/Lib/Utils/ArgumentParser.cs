@@ -2,7 +2,7 @@ class ArgumentParser {
     private List<string> Args = new();
     private Dictionary<string, string> ArgMap = new(){
         {"--period", "604800000"}, // 1 week
-        { "--scaler", "./Lib/Autoscaler/autoscaler.py" },
+        { "--scaler", "./autoscaler.py" },
         {"--database", ":memory:"},
         {"--prometheus-addr", "http://localhost:30000"},
         {"--deployment", "stregsystemet-deployment"},

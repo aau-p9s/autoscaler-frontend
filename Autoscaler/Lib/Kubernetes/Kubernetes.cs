@@ -30,7 +30,7 @@ class Kubernetes {
     //public JsonObject Recv(Uri uri) {
     //}
 
-    public void Patch(string endpoint, object body) {
+    public async void Patch(string endpoint, object body) {
         Console.WriteLine(Addr + endpoint);
         try{
             var request = new HttpRequestMessage {
@@ -40,7 +40,8 @@ class Kubernetes {
             };
             if (authHeader != null)
                 request.Headers.Add(authHeader.Item1, authHeader.Item2);
-            client.SendAsync(request);
+            var response = await client.SendAsync(request);
+            Console.WriteLine(response.StatusCode);
         }
         catch(HttpRequestException e) {
             Console.WriteLine("no api seems to be available, running offline...");

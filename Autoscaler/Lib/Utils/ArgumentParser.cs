@@ -8,6 +8,9 @@ class ArgumentParser {
         {"--deployment", "stregsystemet-deployment"},
         {"--kube-api", "http://localhost:8001"}
     };
+    public ArgumentParser(string[] args) {
+        SetArgs(args);
+    }
     public void SetArgs(string[] args){
         for(int i = 0; i < args.Length; i++)
             Args.Add(args[i]);

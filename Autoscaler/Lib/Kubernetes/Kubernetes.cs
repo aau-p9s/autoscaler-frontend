@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Autoscaler.Lib.Autoscaler;
 
 namespace Autoscaler.Lib.Kubernetes;
 
@@ -7,7 +8,9 @@ class Kubernetes {
     readonly HttpClientHandler handler;
     readonly HttpClient client;
     readonly Tuple<string, string>? authHeader;
-    public Kubernetes() {
+    readonly string Addr;
+    public Kubernetes(string addr) {
+        Addr = addr;
         handler = new() {
             ClientCertificateOptions = ClientCertificateOption.Manual,
             // TODO: Handle actual certificate
@@ -31,7 +34,7 @@ class Kubernetes {
         try{
             var request = new HttpRequestMessage {
                 Method = HttpMethod.Patch,
-                RequestUri = new Uri(Autoscaler.Args.Get("--kube-api")),
+                RequestUri = new Uri(Addr + endpoint),
                 Content = new StringContent(JsonSerializer.Serialize(body))
             };
             if (authHeader != null)

@@ -9,9 +9,9 @@ using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Data.Sqlite;
 
-namespace Autoscaler;
+namespace Autoscaler.Lib.Database;
 
-class Database {
+public class Database {
     readonly string Path;
     readonly SqliteConnection Connection;
 

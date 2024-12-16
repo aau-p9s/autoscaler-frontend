@@ -1,5 +1,5 @@
 {
-  description = "autoscaler-frontend nix flake";
+  description = "Autoscaler nix flake";
 
   inputs = {
     nixpkgs.url = "nixpkgs/nixos-unstable";

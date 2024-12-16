@@ -1,52 +1,33 @@
 using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Autoscaler.Lib.Autoscaler;
+using Autoscaler.Lib.Database;
 
-namespace autoscaler_frontend;
-
-public class Forecast {
-    public readonly int Amount;
-    public readonly DateTime Timestamp;
-    public Forecast(int amount, DateTime timestamp) {
-        Amount = amount;
-        Timestamp = timestamp;
-    }
-}
+namespace Autoscaler;
 
 public class Forecaster
 {
+    private Thread thread;
     private Dictionary<DateTime, int> Predictions = new();
-
-    public static Forecaster Singleton = new();
-    public Forecaster() {
+    readonly string Script;
+    readonly int Period;
+    readonly Database Database;
+    public Forecaster(Database database, string script, int period) {
+        Script = script;
+        Period = period;
+        Database = database;
+        thread = new Thread(Run);
     }
-
-    public Dictionary<DateTime, int> Prediction() {
-        var now = DateTime.Now;
-        Dictionary<DateTime, int> final = new();
-        foreach(var (key, value) in Predictions) {
-            if(key > now)
-                final[key] = value;
-        }
-        return final;
+    public void Start() {
+        thread.Start();
     }
-
-    public Dictionary<DateTime, int> Historic() {
-        var now = DateTime.Now;
-        Dictionary<DateTime, int> final = new();
-        foreach(var (key, value) in Predictions) {
-            if(key <= now)
-                final[key] = value;
-        }
-        return final;
-    }
-
     public Forecast NextForecast() {
         Console.WriteLine($"Count: {Predictions.Count}");
         if(Predictions.Count == 0) 
             Run();
         var next = Predictions.Min(date => date.Key);
-        var forecast = new Forecast(Predictions[next], next);
+        var forecast = new Forecast(next, Predictions[next]);
         Predictions.Remove(next);
         return forecast;
     }
@@ -56,9 +37,9 @@ public class Forecaster
         Process Predicter = new();
         Predicter.StartInfo.RedirectStandardOutput = true;
         Predicter.StartInfo.RedirectStandardInput = true;
-        Predicter.StartInfo.FileName = ArgumentParser.Get("--scaler");
+        Predicter.StartInfo.FileName = Script;
         Predicter.Start();
-        var historical = Database.Singleton.AllHistorical();
+        var historical = Database.AllHistorical();
         Predicter.StandardInput.WriteLine(JsonSerializer.Serialize(historical));
         var line = Predicter.StandardOutput.ReadLine();
         if (line == null) return;

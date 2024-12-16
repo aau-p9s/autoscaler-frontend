@@ -25,7 +25,7 @@ const TimePeriodGraph = () => {
             data = [30, 35, 28, 40, 45, 50, 55, 60, 62, 65, 70, 72, 75, 78, 80, 82, 85, 87, 90, 92, 95, 98, 100, 105];
         } else if (interval === 'week') {
             labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-            var response = await fetch("/forecast");
+            var response = await fetch("http://" + window.location.hostname + ":8080/forecast");
             var json = await response.json();
             data = Object.keys(json.item2).map((key) => json.item2[key]);
         }

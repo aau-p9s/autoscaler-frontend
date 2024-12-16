@@ -10,16 +10,15 @@ using autoscaler_frontend;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Data.Sqlite;
 
-class Database{
+namespace Autoscaler.Lib.Database;
+
+public class Database {
     readonly string Path;
     readonly SqliteConnection Connection;
-    public static Database Singleton = new(ArgumentParser.Get("--database"));
+
     public Database(string path){
         Path = path;
         Connection = new SqliteConnection($"Data Source={Path}");
-    }
-
-    public void Init() {
         Connection.Open();
         var command = Connection.CreateCommand();
         command.CommandText = @"
@@ -47,9 +46,9 @@ class Database{
         ";
             //INSERT OR IGNORE INTO settings (scaleup, scaledown, scaleperiod) VALUES ('0', '0', '0')
         command.ExecuteNonQuery();
+    }
 
-        var thread = new Thread(UpdateThread);
-        thread.Start();
+    public static void Init() {
     }
     public void Add(DateTime time, int value) {
         var command = Connection.CreateCommand();
@@ -113,7 +112,6 @@ class Database{
             return Settings;
         }
     }
-
     public Dictionary<DateTime, int> AllHistorical() {
         var command = Connection.CreateCommand();
         command.CommandText = @"
@@ -128,84 +126,64 @@ class Database{
         return result;
     }
 
-    async void UpdateThread() {
-        var generator = new PrometheusGenerator();
-        var forecast = Forecaster.Singleton.NextForecast();
-        while(true) {
-            var data = await generator.GetMetrics();
-            foreach(var (timestamp, value) in data) {
-                var command = Connection.CreateCommand();
-                command.CommandText = @"
-                    INSERT OR IGNORE INTO historical (id, timestamp, amount) VALUES (
-                        (SELECT id FROM historical WHERE strftime('%Y-%m-%d-%H:%M', timestamp) = strftime('%Y-%m-%d-%H:%M', $time)),
-                        $time,
-                        $amount
-                    )
-                ";
-                command.Parameters.AddWithValue("$time",new DateTime(1970, 1, 1, 0, 0, 0).AddSeconds(timestamp));
-                command.Parameters.AddWithValue("amount", value);
-                command.ExecuteNonQuery();
-            }
-            using(var command = Connection.CreateCommand()) {
-                command.CommandText = @"
-                    DELETE FROM historical where
-                        timestamp <= date('now','-7 day');
-
-                    DELETE FROM forecasts where
-                        timestamp <= date('now');
-                ";
-                command.ExecuteNonQuery();
-            }
-            var settings = GetSettings();
-            // TODO: fix hardcoded replica count
-            var replicas = 1;
-            if(forecast.Amount > settings.ScaleUp)
-                replicas++;
-            if(forecast.Amount <= settings.ScaleDown && replicas > 1)
-                replicas--;
-
-            // get replicaset name
-            Dictionary<string, Dictionary<string, int>> patchData = new() {{
-                "spec", new() {{
-                    "replicas",replicas
-                }}
-            }};
-            try {
-                HttpClientHandler handler = new();
-                handler.ClientCertificateOptions = ClientCertificateOption.Manual;
-                // TODO: Handle actual certificate
-                handler.ServerCertificateCustomValidationCallback = 
-                    (httpRequestMessage, cert, cetChain, policyErrors) =>
-                {
-                    return true;
-                };
-                HttpClient client = new(handler);
-                string token;
-                if(!File.Exists("/var/run/secrets/kubernetes.io/serviceaccount/token"))
-                    token = "";
-                else {
-                    StreamReader stream = new("/var/run/secrets/kubernetes.io/serviceaccount/token");
-                    token = stream.ReadToEnd();
-                }
-                using(var request = new HttpRequestMessage()) {
-                    request.Method = HttpMethod.Patch;
-                    request.RequestUri = new Uri($"{ArgumentParser.Get("--kube-api")}/apis/apps/v1/namespaces/default/deployments/{ArgumentParser.Get("--deployment")}/scale");
-                    request.Content = new StringContent(JsonSerializer.Serialize(patchData), new MediaTypeHeaderValue("application/merge-patch+json"));
-                    request.Headers.Add("Authorization", $"Bearer {token}");
-                    var response = await client.SendAsync(request);
-                    if(response.StatusCode != System.Net.HttpStatusCode.OK) {
-                        Console.WriteLine(await response.Content.ReadAsStringAsync());
-                        Environment.Exit(1);
-                    }
-                }
-            }
-            catch (HttpRequestException e) {
-                Console.WriteLine("no api seems to be available, running offline...");
-            }
-            forecast = Forecaster.Singleton.NextForecast();
-            var delay = (forecast.Timestamp - DateTime.Now).TotalMilliseconds;
-            if(forecast.Timestamp > DateTime.Now)
-                Thread.Sleep((int)delay);
+    public void InsertHistorical(IEnumerable<Tuple<int, double>> data) {
+        foreach(var (timestamp, value) in data) {
+            var command = Connection.CreateCommand();
+            command.CommandText = @"
+                INSERT OR IGNORE INTO historical (id, timestamp, amount) VALUES (
+                    (SELECT id FROM historical WHERE strftime('%Y-%m-%d-%H:%M', timestamp) = strftime('%Y-%m-%d-%H:%M', $time)),
+                    $time,
+                    $amount
+                )
+            ";
+            command.Parameters.AddWithValue("$time",new DateTime(1970, 1, 1, 0, 0, 0).AddSeconds(timestamp));
+            command.Parameters.AddWithValue("$amount", value);
+            command.ExecuteNonQuery();
         }
+    }
+
+    public Dictionary<DateTime, int> Historic(DateTime from) {
+        var command = Connection.CreateCommand();
+        command.CommandText = @"
+            SELECT timestamp, amount FROM historical WHERE
+                strftime('%Y-%m-%d-%H:%M', timestamp) >= strftime('%Y-%m-%d-%H:%M', $time)
+        ";
+        command.Parameters.AddWithValue("$time", from);
+        Dictionary<DateTime, int> result = new();
+        using(var reader = command.ExecuteReader()) {
+            while(reader.Read()) {
+                result[reader.GetDateTime(0)] = reader.GetInt32(1);
+            }
+        }
+        return result;
+    }
+
+    public Dictionary<DateTime, int> Prediction(DateTime to) {
+        var command = Connection.CreateCommand();
+        command.CommandText = @"
+            SELECT timestamp, amount FROM forecasts WHERE
+                strftime('%Y-%m-%d-%H:%M', timestamp) <= strftime('%Y-%m-%d-%H:%M', $time)
+        ";
+        command.Parameters.AddWithValue("$time", to);
+        Dictionary<DateTime, int> result = new();
+        using(var reader = command.ExecuteReader()) {
+            while(reader.Read()) {
+                result[reader.GetDateTime(0)] = reader.GetInt32(1);
+            }
+        }
+        return result;
+    }
+
+
+    public void Clean() {
+        var command = Connection.CreateCommand();
+        command.CommandText = @"
+            DELETE FROM historical where
+                timestamp <= date('now','-7 day');
+
+            DELETE FROM forecasts where
+                timestamp <= date('now');
+        ";
+        command.ExecuteNonQuery();
     }
 }

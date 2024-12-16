@@ -31,6 +31,7 @@ class Kubernetes {
     //}
 
     public void Patch(string endpoint, object body) {
+        Console.WriteLine(Addr + endpoint);
         try{
             var request = new HttpRequestMessage {
                 Method = HttpMethod.Patch,
@@ -65,7 +66,6 @@ class Kubernetes {
             return 0;
         }
         var json = await response.Content.ReadFromJsonAsync<JsonObject>();
-        Console.WriteLine($"Replicas response json: {json}");
         if (json == null)
             return 0;
         var spec = json["spec"];

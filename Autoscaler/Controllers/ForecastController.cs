@@ -15,10 +15,20 @@ public class ForecastController : ControllerBase {
     }
 
     [HttpGet]
-    public async Task<IActionResult> Get() {
-        return Ok(new Tuple<Dictionary<DateTime, int>, Dictionary<DateTime, int>> (
-            Database.Historic(DateTime.Now.AddDays(-3)),
-            Database.Prediction(DateTime.Now.AddDays(3))
+    public async Task<IActionResult> Get()
+    {
+        
+        return Ok(new Dictionary<DateTime, int> (
+            Database.Prediction(DateTime.Now.AddDays(7))
+        ));
+    }
+    
+    [HttpPost]
+    public async Task<IActionResult> ManualChange([FromBody] Dictionary<DateTime,int> data)
+    {
+        Database.ManualChange(data);
+        return Ok(new Dictionary<DateTime, int> (
+            Database.Prediction(DateTime.Now.AddDays(-7))
         ));
     }
 }

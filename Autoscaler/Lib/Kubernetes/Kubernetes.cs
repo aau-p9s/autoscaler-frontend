@@ -31,8 +31,7 @@ class Kubernetes {
     //public JsonObject Recv(Uri uri) {
     //}
 
-    public async void Patch(string endpoint, object body) {
-        Console.WriteLine(Addr + endpoint);
+    public async Task<bool> Patch(string endpoint, object body) {
         try{
             var request = new HttpRequestMessage {
                 Method = HttpMethod.Patch,
@@ -42,7 +41,10 @@ class Kubernetes {
             if (authHeader != null)
                 request.Headers.Add(authHeader.Item1, authHeader.Item2);
             var response = await client.SendAsync(request);
-            Console.WriteLine(response.StatusCode);
+            if (response.IsSuccessStatusCode)
+                return true;
+            else
+                return false;
         }
         catch(HttpRequestException e) {
             Console.WriteLine("no api seems to be available, running offline...");
@@ -50,6 +52,8 @@ class Kubernetes {
             if(e.InnerException != null)
                 Console.WriteLine(e.InnerException.Message);
         }
+        //should not be possible to reach this point
+        return false;
     }
     public async Task<int> Replicas(string deployment) {
         var request = new HttpRequestMessage {

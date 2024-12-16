@@ -10,7 +10,6 @@ Database database = new(Args.Get("--database"));
 Scaler scaler = new(database, Args.Get("--deployment"), int.Parse(Args.Get("--period")), Args.Get("--kube-api"), Args.Get("--prometheus-addr"), Args.Get("--scaler"));
 
 builder.Services.AddSingleton(database);
-
 // Add services to the container.
 builder.Services.AddControllers();
 // Add Swagger services

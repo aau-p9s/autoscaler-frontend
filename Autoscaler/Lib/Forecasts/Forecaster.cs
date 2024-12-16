@@ -23,7 +23,6 @@ public class Forecaster
         thread.Start();
     }
     public Forecast NextForecast() {
-        Console.WriteLine($"Count: {Predictions.Count}");
         if(Predictions.Count == 0)
             Run();
         var next = Predictions.Min(date => date.Key);

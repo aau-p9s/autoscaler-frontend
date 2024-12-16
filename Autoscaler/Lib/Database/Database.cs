@@ -15,6 +15,8 @@ namespace Autoscaler.Lib.Database;
 public class Database {
     readonly string Path;
     readonly SqliteConnection Connection;
+    private bool _isManualChange = false;
+    public bool IsManualChange => _isManualChange;
 
     public Database(string path){
         Path = path;
@@ -47,9 +49,7 @@ public class Database {
             //INSERT OR IGNORE INTO settings (scaleup, scaledown, scaleperiod) VALUES ('0', '0', '0')
         command.ExecuteNonQuery();
     }
-
-    public static void Init() {
-    }
+    
     public void Add(DateTime time, int value) {
         var command = Connection.CreateCommand();
         command.CommandText = @"
@@ -59,6 +59,7 @@ public class Database {
         command.Parameters.AddWithValue("$amount", value);
         command.ExecuteNonQuery();
     }
+    
     public Dictionary<int, int> GetByTimestamp(DateTime time) {
         Dictionary<int, int> result = new();
         var command = Connection.CreateCommand();
@@ -138,7 +139,7 @@ public class Database {
             ";
             command.Parameters.AddWithValue("$time",new DateTime(1970, 1, 1, 0, 0, 0).AddSeconds(timestamp));
             command.Parameters.AddWithValue("$amount", value);
-            command.ExecuteNonQuery();
+            command.ExecuteNonQueryAsync();
         }
     }
 
@@ -173,6 +174,35 @@ public class Database {
         }
         return result;
     }
+    
+    public void ManualChange(Dictionary<DateTime,int> data) {
+        foreach (var p in data)
+        {
+            // Delete existing rows with the same timestamp
+            using (var deleteCommand = Connection.CreateCommand())
+            {
+                deleteCommand.CommandText = @"
+                DELETE FROM forecasts WHERE timestamp = $time
+            ";
+                deleteCommand.Parameters.AddWithValue("$time", p.Key);
+                deleteCommand.ExecuteNonQuery();
+            }
+        }
+        foreach (var p in data)
+        {
+            // Insert new rows
+            using (var command = Connection.CreateCommand())
+            {
+                command.CommandText = @"
+                INSERT INTO forecasts (timestamp, amount, fetch_time) VALUES ($time, $amount, date('now'))
+            ";
+                command.Parameters.AddWithValue("$time", p.Key);
+                command.Parameters.AddWithValue("$amount", p.Value);
+                command.ExecuteNonQuery();
+            }
+        }
+        _isManualChange = true;
+    }
 
 
     public void Clean() {
@@ -185,5 +215,6 @@ public class Database {
                 timestamp <= date('now');
         ";
         command.ExecuteNonQuery();
+        _isManualChange = false;
     }
 }

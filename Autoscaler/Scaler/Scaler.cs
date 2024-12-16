@@ -35,7 +35,6 @@ class Scaler {
 
             var settings = Database.GetSettings();
             var replicas = await kubernetes.Replicas(Deployment);
-            Console.WriteLine($"current replicas: {replicas}");
             //var replicas = 1;
             if(forecast.Value > settings.ScaleUp)
                 replicas++;
@@ -47,11 +46,17 @@ class Scaler {
                     "replicas",replicas
                 }}
             }};
-            Console.WriteLine($"Forecasted value: {forecast.Value}");
-            Console.WriteLine($"replicas: {replicas}");
 
-            kubernetes.Patch($"/apis/apps/v1/namespaces/default/deployments/{Deployment}/scale", patchData);
-
+            try {
+                var res = await kubernetes.Patch($"/apis/apps/v1/namespaces/default/deployments/{Deployment}/scale", patchData);
+                if(!res)
+                    throw new HttpRequestException("Failed to patch deployment");
+            }
+            catch(HttpRequestException e) {
+                Console.WriteLine("Failed to patch deployment");
+                Console.WriteLine(e.Message);
+            }
+            
             forecast = forecaster.NextForecast();
             var delay = (forecast.Timestamp - DateTime.Now).TotalMilliseconds;
             if(forecast.Timestamp > DateTime.Now)

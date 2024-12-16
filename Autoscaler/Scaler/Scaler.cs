@@ -46,6 +46,8 @@ class Scaler {
                     "replicas",replicas
                 }}
             }};
+            Console.WriteLine($"replicas: {replicas}");
+            
             kubernetes.Patch($"/apis/apps/v1/namespaces/default/deployments/{Deployment}/scale", patchData);
 
             forecast = forecaster.NextForecast();

@@ -24,7 +24,7 @@ public class Forecaster
     }
     public Forecast NextForecast() {
         Console.WriteLine($"Count: {Predictions.Count}");
-        if(Predictions.Count == 0) 
+        if(Predictions.Count == 0)
             Run();
         var next = Predictions.Min(date => date.Key);
         var forecast = new Forecast(next, Predictions[next]);
@@ -40,7 +40,7 @@ public class Forecaster
         Predicter.StartInfo.FileName = Script;
         Predicter.Start();
         var historical = Database.AllHistorical();
-        Predicter.StandardInput.WriteLine(JsonSerializer.Serialize(historical));
+        //Predicter.StandardInput.WriteLine(JsonSerializer.Serialize(historical));
         var line = Predicter.StandardOutput.ReadLine();
         if (line == null) return;
         var data = JsonSerializer.Deserialize<JsonArray>(line);

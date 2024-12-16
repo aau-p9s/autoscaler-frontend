@@ -48,4 +48,32 @@ class Kubernetes {
                 Console.WriteLine(e.InnerException.Message);
         }
     }
+    public async Task<int> Replicas(string deployment) {
+        var request = new HttpRequestMessage {
+            Method = HttpMethod.Get,
+            RequestUri = new Uri(Addr + $"/apis/apps/v1/namespaces/default/deployments/{deployment}/scale"),
+            
+        };
+        if(authHeader != null)
+            request.Headers.Add(authHeader.Item1, authHeader.Item2);
+        HttpResponseMessage response;
+        try {
+            response = await client.SendAsync(request);
+        }
+        catch(HttpRequestException e) {
+            Console.WriteLine("kubernetes seems to be down...");
+            return 0;
+        }
+        var json = await response.Content.ReadFromJsonAsync<JsonObject>();
+        if (json == null)
+            return 0;
+        var spec = json["spec"];
+        if(spec == null)
+            return 0;
+        var replicasObj = spec["replicas"];
+        if (replicasObj == null)
+            return 0;
+        var replicas = (int)replicasObj;
+        return replicas;
+    }
 }

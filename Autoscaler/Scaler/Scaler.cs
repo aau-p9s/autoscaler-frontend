@@ -34,7 +34,8 @@ class Scaler {
             Database.Clean();
 
             var settings = Database.GetSettings();
-            var replicas = 1;
+            var replicas = await kubernetes.Replicas(Deployment);
+            //var replicas = 1;
             if(forecast.Value > settings.ScaleUp)
                 replicas++;
             if(forecast.Value <= settings.ScaleDown && replicas > 1)

@@ -1,6 +1,8 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
+namespace Autoscaler.Lib.Kubernetes;
+
 class Kubernetes {
     readonly HttpClientHandler handler;
     readonly HttpClient client;
@@ -29,7 +31,7 @@ class Kubernetes {
         try{
             var request = new HttpRequestMessage {
                 Method = HttpMethod.Patch,
-                RequestUri = new Uri($"{ArgumentParser.Get("--kube-api")}"),
+                RequestUri = new Uri(Autoscaler.Args.Get("--kube-api")),
                 Content = new StringContent(JsonSerializer.Serialize(body))
             };
             if (authHeader != null)

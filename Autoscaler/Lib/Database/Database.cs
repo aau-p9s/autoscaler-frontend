@@ -9,19 +9,15 @@ using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Data.Sqlite;
 
+namespace Autoscaler;
+
 class Database {
     readonly string Path;
     readonly SqliteConnection Connection;
-    public static Database Singleton = new(ArgumentParser.Get("--database"));
-
-    readonly AutoScaler scaler = new();
 
     public Database(string path){
         Path = path;
         Connection = new SqliteConnection($"Data Source={Path}");
-    }
-
-    public void Init() {
         Connection.Open();
         var command = Connection.CreateCommand();
         command.CommandText = @"
@@ -49,9 +45,9 @@ class Database {
         ";
             //INSERT OR IGNORE INTO settings (scaleup, scaledown, scaleperiod) VALUES ('0', '0', '0')
         command.ExecuteNonQuery();
+    }
 
-        var thread = new Thread(scaler.Run);
-        thread.Start();
+    public static void Init() {
     }
     public void Add(DateTime time, int value) {
         var command = Connection.CreateCommand();
@@ -127,10 +123,43 @@ class Database {
                 )
             ";
             command.Parameters.AddWithValue("$time",new DateTime(1970, 1, 1, 0, 0, 0).AddSeconds(timestamp));
-            command.Parameters.AddWithValue("amount", value);
+            command.Parameters.AddWithValue("$amount", value);
             command.ExecuteNonQuery();
         }
     }
+
+    public Dictionary<DateTime, int> Historic(DateTime from) {
+        var command = Connection.CreateCommand();
+        command.CommandText = @"
+            SELECT timestamp, amount FROM historical WHERE
+                strftime('%Y-%m-%d-%H:%M', timestamp) >= strftime('%Y-%m-%d-%H:%M', $time)
+        ";
+        command.Parameters.AddWithValue("$time", from);
+        Dictionary<DateTime, int> result = new();
+        using(var reader = command.ExecuteReader()) {
+            while(reader.Read()) {
+                result[reader.GetDateTime(0)] = reader.GetInt32(1);
+            }
+        }
+        return result;
+    }
+
+    public Dictionary<DateTime, int> Prediction(DateTime to) {
+        var command = Connection.CreateCommand();
+        command.CommandText = @"
+            SELECT timestamp, amount FROM forecasts WHERE
+                strftime('%Y-%m-%d-%H:%M', timestamp) <= strftime('%Y-%m-%d-%H:%M', $time)
+        ";
+        command.Parameters.AddWithValue("$time", to);
+        Dictionary<DateTime, int> result = new();
+        using(var reader = command.ExecuteReader()) {
+            while(reader.Read()) {
+                result[reader.GetDateTime(0)] = reader.GetInt32(1);
+            }
+        }
+        return result;
+    }
+
 
     public void Clean() {
         var command = Connection.CreateCommand();

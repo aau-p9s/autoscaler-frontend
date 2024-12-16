@@ -2,6 +2,8 @@ using System.Net.Sockets;
 using System.Text.Json.Nodes;
 using System.Web;
 
+namespace Autoscaler.Lib.Kubernetes;
+
 class Prometheus {
     private readonly HttpClient client;
     public Prometheus() {
@@ -13,7 +15,7 @@ class Prometheus {
         List<Tuple<int, double>> result_list = new();
         HttpResponseMessage response;
         try {
-            response = await client.GetAsync($"{ArgumentParser.Get("--prometheus-addr")}/api/v1/query_range?{query}");
+            response = await client.GetAsync($"{Autoscaler.Args.Get("--prometheus-addr")}/api/v1/query_range?{query}");
         }
         catch {
             Console.WriteLine("prometheus seems to be down...");

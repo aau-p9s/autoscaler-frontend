@@ -3,7 +3,7 @@ FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build-env
 WORKDIR /App
 
 # Copy everything
-COPY ./autoscaler-frontend .
+COPY ./Autoscaler .
 # Restore as distinct layers
 RUN dotnet restore
 
@@ -28,6 +28,6 @@ RUN apt-get update && apt-get install -y python3 curl && \
 
 # Copy application files
 COPY --from=build-env /App/out .
-COPY ./autoscaler-frontend/Autoscaler/autoscaler.py .
+COPY ./Autoscaler/autoscaler.py .
 
-ENTRYPOINT ["dotnet", "autoscaler-frontend.dll", "--scaler", "./autoscaler.py"]
+ENTRYPOINT ["dotnet", "Autoscaler.dll", "--scaler", "./autoscaler.py"]

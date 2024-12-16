@@ -35,6 +35,7 @@ class Scaler {
 
             var settings = Database.GetSettings();
             var replicas = await kubernetes.Replicas(Deployment);
+            Console.WriteLine($"current replicas: {replicas}");
             //var replicas = 1;
             if(forecast.Value > settings.ScaleUp)
                 replicas++;
@@ -46,8 +47,9 @@ class Scaler {
                     "replicas",replicas
                 }}
             }};
+            Console.WriteLine($"Forecasted value: {forecast.Value}");
             Console.WriteLine($"replicas: {replicas}");
-            
+
             kubernetes.Patch($"/apis/apps/v1/namespaces/default/deployments/{Deployment}/scale", patchData);
 
             forecast = forecaster.NextForecast();

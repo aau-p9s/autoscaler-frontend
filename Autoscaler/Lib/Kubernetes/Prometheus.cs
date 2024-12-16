@@ -1,20 +1,24 @@
 using System.Net.Sockets;
 using System.Text.Json.Nodes;
 using System.Web;
+using Autoscaler.Lib.Autoscaler;
 
-class PrometheusGenerator {
+namespace Autoscaler.Lib.Kubernetes;
+
+class Prometheus {
     private readonly HttpClient client;
-    public PrometheusGenerator() {
+    readonly string Addr;
+    public Prometheus(string addr) {
+        Addr = addr;
         client = new HttpClient();
     }
 
-    public async Task<IEnumerable<Tuple<int, double>>> GetMetrics() {
-        var query = BuildQuery("sum(rate(container_cpu_usage_seconds_total{container=~\"stregsystemet\"}[5m]))/4*100");
-        Console.WriteLine(query);
+    public async Task<IEnumerable<Tuple<int, double>>> QueryRange(string queryString, DateTime start, DateTime end) {
+        var query = EncodeQuery($"query={queryString}&start={ToRFC3339(start)}&end={ToRFC3339(end)}&step=60s");
         List<Tuple<int, double>> result_list = new();
         HttpResponseMessage response;
         try {
-            response = await client.GetAsync(query);
+            response = await client.GetAsync($"{Addr}/api/v1/query_range?{query}");
         }
         catch {
             Console.WriteLine("prometheus seems to be down...");
@@ -52,13 +56,8 @@ class PrometheusGenerator {
         end:
         return result_list;
     }
-    public string BuildQuery(string target) {
-        var addr = ArgumentParser.Get("--prometheus-addr");
-        var urlEncodedTarget = HttpUtility.UrlEncode(target);
-        var baseQuery = $"{addr}/api/v1/query_range?query={urlEncodedTarget}";
-        var timeNow = DateTime.Now;
-        var time7DaysAgo = timeNow.AddDays(-7);
-        return baseQuery + "&start=" + ToRFC3339(time7DaysAgo) + "&end=" + ToRFC3339(timeNow) + "&step=60s";
+    public string EncodeQuery(string target) {
+        return HttpUtility.UrlEncode(target);
     }
 
     private string ToRFC3339(DateTime date) {

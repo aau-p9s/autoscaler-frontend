@@ -1,11 +1,18 @@
-using autoscaler_frontend;
+using Autoscaler;
+using Autoscaler.Lib.Autoscaler;
+using Autoscaler.Lib.Database;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
+ArgumentParser Args = new(args);
+Database database = new(Args.Get("--database"));
+Scaler scaler = new(database, Args.Get("--deployment"), int.Parse(Args.Get("--period")), Args.Get("--kube-api"), Args.Get("--prometheus-addr"));
+
+builder.Services.AddSingleton(database);
+
 // Add services to the container.
 builder.Services.AddControllers();
-
 // Add Swagger services
 builder.Services.AddSwaggerGen(options =>
 {
@@ -16,7 +23,6 @@ builder.Services.AddSwaggerGen(options =>
         Description = "API documentation for AutoScaler Frontend",
     });
 });
-
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowSpecificOrigin", builder =>
@@ -26,11 +32,8 @@ builder.Services.AddCors(options =>
             .AllowAnyMethod();
     });
 });
-
 builder.WebHost.UseUrls("http://0.0.0.0:8080");
-
 var app = builder.Build();
-
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
@@ -46,25 +49,13 @@ else
         options.RoutePrefix = string.Empty; // Makes Swagger UI available at the root ("/")
     });
 }
-
 app.UseStaticFiles();
 app.UseRouting();
-
-ArgumentParser.SetArgs(args);
-
-Forecaster.Singleton.Start();
-Database.Singleton.Init();
-
 app.UseCors();
-
 app.UseEndpoints(endpoints =>
 {
     endpoints.MapControllers().RequireCors("AllowSpecificOrigin");
 });
-
-var db = new Database(ArgumentParser.Get("--database"));
-
-PrometheusGenerator gen = new();
-await gen.GetMetrics();
-
+app.Lifetime.ApplicationStopping.Register(() => {
+});
 app.Run();

@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "autoscaler-frontend", "autoscaler-frontend\autoscaler-frontend.csproj", "{3C20A336-B7FE-4BCF-A5B1-566C0AA36454}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Autoscaler", "Autoscaler/Autoscaler.csproj", "{3C20A336-B7FE-4BCF-A5B1-566C0AA36454}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

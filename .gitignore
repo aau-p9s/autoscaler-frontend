@@ -9,3 +9,7 @@ venv
 
 .vscode
 out
+
+obj
+.vscode
+bin

@@ -1,3 +1,4 @@
+using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Autoscaler.Lib.Autoscaler;
@@ -36,7 +37,7 @@ class Kubernetes {
             var request = new HttpRequestMessage {
                 Method = HttpMethod.Patch,
                 RequestUri = new Uri(Addr + endpoint),
-                Content = new StringContent(JsonSerializer.Serialize(body))
+                Content = new StringContent(JsonSerializer.Serialize(body), new MediaTypeHeaderValue("application/merge-patch+json"))
             };
             if (authHeader != null)
                 request.Headers.Add(authHeader.Item1, authHeader.Item2);

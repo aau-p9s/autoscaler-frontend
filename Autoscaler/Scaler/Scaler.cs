@@ -1,13 +1,12 @@
-using Autoscaler.Lib.Database;
 using Autoscaler.Lib.Forecasts;
 using Autoscaler.Lib.Kubernetes;
 
-namespace Autoscaler.Lib.Autoscaler;
+namespace Autoscaler.Scaler;
 
 class Scaler {
     
 
-    private readonly Database.Database Database;
+    private readonly Lib.Database.Database Database;
     private readonly string Deployment;
     private readonly int Period;
     readonly string KubeAddr;
@@ -15,7 +14,7 @@ class Scaler {
     readonly string Script;
     private readonly string Retrainer;
     readonly Thread thread;
-    public Scaler(Database.Database database, string deployment, int period, string kubeAddr, string prometheusAddr, string script, string retrainer) {
+    public Scaler(Lib.Database.Database database, string deployment, int period, string kubeAddr, string prometheusAddr, string script, string retrainer) {
         Database = database;
         Deployment = deployment;
         Period = period;
@@ -28,7 +27,7 @@ class Scaler {
     }
     public async void Scale() {
         Prometheus prometheus = new(PrometheusAddr);
-        Kubernetes.Kubernetes kubernetes = new(KubeAddr);
+        Lib.Kubernetes.Kubernetes kubernetes = new(KubeAddr);
         Forecaster forecaster = new(Database, Script, Period, Retrainer);
         Forecast forecast = new();
         await forecaster.Run();

@@ -20,15 +20,15 @@ RUN dotnet publish -c Release -o out
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /App
 
-# Install Node.js
-RUN apt-get update && apt-get install -y python3 curl && \
+# Install Node.js and Python
+RUN apt-get update && apt-get install -y python3 python3-pip python3-venv curl && \
     curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
     apt-get install -y nodejs && \
     apt-get clean && rm -rf /var/lib/apt/lists/* 
 
-# Install Pip
-RUN apt-get update && apt-get install -y python3-pip && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+# Create and activate a Python virtual environment
+RUN python3 -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
 
 # Copy application files
 COPY --from=build-env /App/out .
@@ -36,7 +36,7 @@ COPY ./Autoscaler/predict.py .
 COPY ./Autoscaler/train.py .
 COPY ./requirements.txt .
 
-# Install Python dependencies
-RUN pip3 install -r requirements.txt
+# Install Python dependencies into the virtual environment
+RUN pip install --no-cache-dir -r requirements.txt
 
 ENTRYPOINT ["dotnet", "Autoscaler.dll", "--scaler", "./predict.py", "--re-trainer", "./train.py"]

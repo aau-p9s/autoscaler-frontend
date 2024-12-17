@@ -28,6 +28,7 @@ RUN apt-get update && apt-get install -y python3 curl && \
 
 # Copy application files
 COPY --from=build-env /App/out .
-COPY ./Autoscaler/autoscaler.py .
+COPY ./Autoscaler/predict.py .
+COPY ./Autoscaler/train.py .
 
 ENTRYPOINT ["dotnet", "Autoscaler.dll", "--scaler", "./predict.py", "--re-trainer", "./train.py"]

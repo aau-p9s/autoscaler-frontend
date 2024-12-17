@@ -1,5 +1,5 @@
-using Autoscaler.Lib.Autoscaler;
 using Autoscaler.Lib.Database;
+using Autoscaler.Scaler;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);

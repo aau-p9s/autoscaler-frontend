@@ -1,11 +1,11 @@
 using Autoscaler.Lib.Forecasts;
 using Autoscaler.Lib.Kubernetes;
 
-namespace Autoscaler.Lib.Autoscaler;
+namespace Autoscaler.Scaler;
 
 class Scaler
 {
-    private readonly Database.Database Database;
+    private readonly Lib.Database.Database Database;
     private readonly string Deployment;
     private readonly int Period;
     readonly string KubeAddr;
@@ -13,7 +13,7 @@ class Scaler
     readonly string Script;
     readonly Thread thread;
 
-    public Scaler(Database.Database database, string deployment, int period, string kubeAddr, string prometheusAddr,
+    public Scaler(Lib.Database.Database database, string deployment, int period, string kubeAddr, string prometheusAddr,
         string script)
     {
         Database = database;
@@ -29,7 +29,7 @@ class Scaler
     public async void Scale()
     {
         Prometheus prometheus = new(PrometheusAddr);
-        Kubernetes.Kubernetes kubernetes = new(KubeAddr);
+        Lib.Kubernetes.Kubernetes kubernetes = new(KubeAddr);
         Forecaster forecaster = new(Database, Script, Period);
         Forecast forecast = forecaster.NextForecast();
         while (true)
@@ -38,8 +38,7 @@ class Scaler
                 "sum(rate(container_cpu_usage_seconds_total{container=~\"stregsystemet\"}[5m]))/4*100",
                 DateTime.Now.AddDays(-7), DateTime.Now);
             Database.InsertHistorical(data);
-            if(!Database.IsManualChange)
-                Database.Clean();
+            Database.Clean();
 
             var settings = Database.GetSettings();
             var replicas = await kubernetes.Replicas(Deployment);

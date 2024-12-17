@@ -4,7 +4,7 @@ using System.Text.Json.Nodes;
 using Autoscaler.Lib.Autoscaler;
 using Autoscaler.Lib.Database;
 
-namespace Autoscaler;
+namespace Autoscaler.Lib.Forecasts;
 
 public class Forecaster
 {
@@ -12,8 +12,8 @@ public class Forecaster
     private Dictionary<DateTime, int> Predictions = new();
     readonly string Script;
     readonly int Period;
-    readonly Database Database;
-    public Forecaster(Database database, string script, int period) {
+    readonly Database.Database Database;
+    public Forecaster(Database.Database database, string script, int period) {
         Script = script;
         Period = period;
         Database = database;
@@ -38,9 +38,10 @@ public class Forecaster
         Predicter.StartInfo.RedirectStandardOutput = true;
         Predicter.StartInfo.RedirectStandardInput = true;
         Predicter.StartInfo.FileName = Script;
+        Predicter.StartInfo.Arguments = "10";
         Predicter.Start();
         var historical = Database.AllHistorical();
-        //Predicter.StandardInput.WriteLine(JsonSerializer.Serialize(historical));
+        Predicter.StandardInput.WriteLine(JsonSerializer.Serialize(historical));
         var line = Predicter.StandardOutput.ReadLine();
         if (line == null) return;
         var data = JsonSerializer.Deserialize<JsonArray>(line);

@@ -112,17 +112,23 @@ public class Database {
             return Settings;
         }
     }
-    public Dictionary<DateTime, int> AllHistorical() {
+    public JsonObject AllHistorical() {
         var command = Connection.CreateCommand();
         command.CommandText = @"
             SELECT timestamp, amount FROM historical
         ";
-        Dictionary<DateTime, int> result = new();
+        List<DateTime> time = new();
+        List<int> amount = new();
+
         using(var reader = command.ExecuteReader()) {
             while(reader.Read()) {
-                result[reader.GetDateTime(0)] = reader.GetInt32(1);
+                time.Add(reader.GetDateTime(0));
+                amount.Add(reader.GetInt32(1));
             }
         }
+        JsonObject result = new();
+        result["time"] = JsonSerializer.SerializeToNode(time);
+        result["amount"] = JsonSerializer.SerializeToNode(amount);
         return result;
     }
 

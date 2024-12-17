@@ -1,4 +1,5 @@
 using Autoscaler.Lib.Database;
+using Autoscaler.Lib.Forecasts;
 using Autoscaler.Lib.Kubernetes;
 
 namespace Autoscaler.Lib.Autoscaler;

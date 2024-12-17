@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Autoscaler;
 using Autoscaler.Lib.Autoscaler;
 using Autoscaler.Lib.Database;

@@ -30,7 +30,7 @@ RUN apt-get update && apt-get install -y python3 curl && \
 COPY --from=build-env /App/out .
 COPY ./Autoscaler/predict.py .
 COPY ./Autoscaler/train.py .
-COPY ./Autoscaler/requirements.txt .
+COPY ./requirements.txt .
 
 # Install Python dependencies
 RUN pip3 install -r requirements.txt

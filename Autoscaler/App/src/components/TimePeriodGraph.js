@@ -145,9 +145,6 @@ const TimePeriodGraph = () => {
                             ],
                         }));
                     },
-                    magnet: {
-                        to: Math.round,
-                    },
                     onDragEnd: () => {
                         console.log('Drag ended, data saved.');
                     },

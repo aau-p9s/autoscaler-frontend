@@ -1,3 +1,4 @@
+using Autoscaler.Lib.Forecasts;
 using Microsoft.Data.Sqlite;
 
 namespace Autoscaler.Lib.Database;
@@ -23,12 +24,12 @@ public class Database
             CREATE TABLE IF NOT EXISTS historical (
                 id INTEGER PRIMARY KEY,
                 timestamp DATETIME NOT NULL,
-                amount INTEGER NOT NULL
+                amount DOUBLE NOT NULL
             );
             CREATE TABLE IF NOT EXISTS forecasts (
                 id INTEGER PRIMARY KEY,
                 timestamp DATETIME NOT NULL,
-                amount INTEGER NOT NULL,
+                amount DOUBLE NOT NULL,
                 fetch_time DATETIME NOT NULL
             );
             CREATE TABLE IF NOT EXISTS settings (
@@ -46,30 +47,30 @@ public class Database
         command.ExecuteNonQuery();
     }
 
-    public void Add(DateTime time, int value)
+    public void Add(DateTime time, double value)
     {
         var command = Connection.CreateCommand();
         command.CommandText = $@"
-            INSERT INTO ${HistoricalTable} (timestamp, amount) VALUES ($time, $amount)
+            INSERT INTO {HistoricalTable} (timestamp, amount) VALUES ($time, $amount)
         ";
         command.Parameters.AddWithValue("$time", time);
         command.Parameters.AddWithValue("$amount", value);
         command.ExecuteNonQuery();
     }
 
-    public Dictionary<int, int> GetByTimestamp(DateTime time)
+    public Dictionary<int, double> GetByTimestamp(DateTime time)
     {
-        Dictionary<int, int> result = new();
+        Dictionary<int, double> result = new();
         var command = Connection.CreateCommand();
         command.CommandText = $@"
-            SELECT id, amount FROM ${HistoricalTable} WHERE timestamp = $time
+            SELECT id, amount FROM {HistoricalTable} WHERE timestamp = $time
         ";
         command.Parameters.AddWithValue("$time", time);
         using (var reader = command.ExecuteReader())
         {
             while (reader.Read())
             {
-                result.Add(reader.GetInt32(0), reader.GetInt32(1));
+                result.Add(reader.GetInt32(0), reader.GetDouble(1));
             }
         }
 
@@ -89,7 +90,7 @@ public class Database
             settings.ScalePeriod = oldSettings.ScalePeriod;
 
         command.CommandText = $@"
-            UPDATE ${SettingsTable} SET scaleup = $scaleup, scaledown = $scaledown, scaleperiod = $scaleperiod WHERE id = $id
+            UPDATE {SettingsTable} SET scaleup = $scaleup, scaledown = $scaledown, scaleperiod = $scaleperiod WHERE id = $id
         ";
         command.Parameters.AddWithValue("$scaleup", settings.ScaleUp);
         command.Parameters.AddWithValue("$scaledown", settings.ScaleDown);
@@ -104,7 +105,7 @@ public class Database
         var command = Connection.CreateCommand();
         Settings Settings = new();
         command.CommandText = $@"
-            SELECT id, scaleup, scaledown, scaleperiod FROM ${SettingsTable}
+            SELECT id, scaleup, scaledown, scaleperiod FROM {SettingsTable}
         ";
         using (var reader = command.ExecuteReader())
         {
@@ -117,18 +118,18 @@ public class Database
         }
     }
 
-    public Dictionary<DateTime, int> AllHistorical()
+    public Dictionary<DateTime, double> AllHistorical()
     {
         var command = Connection.CreateCommand();
         command.CommandText = $@"
-            SELECT timestamp, amount FROM ${HistoricalTable}
+            SELECT timestamp, amount FROM {HistoricalTable}
         ";
-        Dictionary<DateTime, int> result = new();
+        Dictionary<DateTime, double> result = new();
         using (var reader = command.ExecuteReader())
         {
             while (reader.Read())
             {
-                result[reader.GetDateTime(0)] = reader.GetInt32(1);
+                result[reader.GetDateTime(0)] = reader.GetDouble(1);
             }
         }
 
@@ -141,8 +142,8 @@ public class Database
         {
             var command = Connection.CreateCommand();
             command.CommandText = $@"
-                INSERT OR IGNORE INTO ${HistoricalTable} (id, timestamp, amount) VALUES (
-                    (SELECT id FROM ${HistoricalTable} WHERE strftime('%Y-%m-%d-%H:%M', timestamp) = strftime('%Y-%m-%d-%H:%M', $time)),
+                INSERT OR IGNORE INTO {HistoricalTable} (id, timestamp, amount) VALUES (
+                    (SELECT id FROM {HistoricalTable} WHERE strftime('%Y-%m-%d-%H:%M', timestamp) = strftime('%Y-%m-%d-%H:%M', $time)),
                     $time,
                     $amount
                 )
@@ -152,48 +153,81 @@ public class Database
             command.ExecuteNonQueryAsync();
         }
     }
+    
+    public void InsertForecast(List<Forecast> data)
+    {
+        foreach (var item in data)
+        {
+            var command = Connection.CreateCommand();
+            command.CommandText = $@"
+                INSERT OR IGNORE INTO {ForecastsTable} (id, timestamp, amount, fetch_time) VALUES (
+                    (SELECT id FROM {ForecastsTable} WHERE strftime('%Y-%m-%d-%H:%M', timestamp) = strftime('%Y-%m-%d-%H:%M', $time)),
+                    $time,
+                    $amount,
+                    date('now')
+                )
+            ";
+            command.Parameters.AddWithValue("$time", item.Timestamp);
+            command.Parameters.AddWithValue("$amount", item.Value);
+            command.ExecuteNonQueryAsync();
+        }
+    }
 
-    public Dictionary<DateTime, int> Historic(DateTime from)
+    public PredictionResult Historic(DateTime from)
     {
         var command = Connection.CreateCommand();
         command.CommandText = $@"
-            SELECT timestamp, amount FROM ${HistoricalTable} WHERE
+            SELECT timestamp, amount FROM {HistoricalTable} WHERE
                 strftime('%Y-%m-%d-%H:%M', timestamp) >= strftime('%Y-%m-%d-%H:%M', $time)
         ";
         command.Parameters.AddWithValue("$time", from);
-        Dictionary<DateTime, int> result = new();
+        PredictionResult result = new();
         using (var reader = command.ExecuteReader())
         {
             while (reader.Read())
             {
-                result[reader.GetDateTime(0)] = reader.GetInt32(1);
+                result.Time.Add(reader.GetDateTime(0));
+                result.Amount.Add(reader.GetDouble(1));
             }
         }
 
         return result;
     }
-
-    public Dictionary<DateTime, int> Prediction(DateTime to)
+    
+    public Forecast GetNewestHistorical()
     {
         var command = Connection.CreateCommand();
         command.CommandText = $@"
-            SELECT timestamp, amount FROM ${ForecastsTable} WHERE
+            SELECT timestamp, amount FROM {HistoricalTable} ORDER BY timestamp DESC LIMIT 1
+        ";
+        using (var reader = command.ExecuteReader())
+        {
+            reader.Read();
+            return new Forecast(reader.GetDateTime(0), reader.GetDouble(1));
+        }
+    }
+
+    public Dictionary<DateTime, double> Prediction(DateTime to)
+    {
+        var command = Connection.CreateCommand();
+        command.CommandText = $@"
+            SELECT timestamp, amount FROM {ForecastsTable} WHERE
                 strftime('%Y-%m-%d-%H:%M', timestamp) <= strftime('%Y-%m-%d-%H:%M', $time)
         ";
         command.Parameters.AddWithValue("$time", to);
-        Dictionary<DateTime, int> result = new();
+        Dictionary<DateTime, double> result = new();
         using (var reader = command.ExecuteReader())
         {
             while (reader.Read())
             {
-                result[reader.GetDateTime(0)] = reader.GetInt32(1);
+                result[reader.GetDateTime(0)] = reader.GetDouble(1);
             }
         }
 
         return result;
     }
 
-    public void ManualChange(Dictionary<DateTime, int> data)
+    public void ManualChange(Dictionary<DateTime, double> data)
     {
         foreach (var p in data)
         {
@@ -201,7 +235,7 @@ public class Database
             using (var deleteCommand = Connection.CreateCommand())
             {
                 deleteCommand.CommandText = $@"
-                DELETE FROM ${ForecastsTable} WHERE timestamp = $time
+                DELETE FROM {ForecastsTable} WHERE timestamp = $time
             ";
                 deleteCommand.Parameters.AddWithValue("$time", p.Key);
                 deleteCommand.ExecuteNonQuery();
@@ -214,7 +248,7 @@ public class Database
             using (var command = Connection.CreateCommand())
             {
                 command.CommandText = $@"
-                INSERT INTO ${ForecastsTable} (timestamp, amount, fetch_time) VALUES ($time, $amount, date('now'))
+                INSERT INTO {ForecastsTable} (timestamp, amount, fetch_time) VALUES ($time, $amount, date('now'))
             ";
                 command.Parameters.AddWithValue("$time", p.Key);
                 command.Parameters.AddWithValue("$amount", p.Value);
@@ -225,15 +259,20 @@ public class Database
         _isManualChange = true;
     }
     
-    public void Clean()
+    public void RemoveAllHistorical()
     {
         var command = Connection.CreateCommand();
         command.CommandText = $@"
-            DELETE FROM ${HistoricalTable} where
-                timestamp <= date('now','-7 day');
-
-            DELETE FROM ${ForecastsTable} where
-                timestamp <= date('now');
+            DELETE FROM {HistoricalTable};
+        ";
+        command.ExecuteNonQuery();
+    }
+    
+    public void RemoveAllForecasts()
+    {
+        var command = Connection.CreateCommand();
+        command.CommandText = $@"
+            DELETE FROM {ForecastsTable};
         ";
         command.ExecuteNonQuery();
         _isManualChange = false;

@@ -18,16 +18,16 @@ public class ForecastController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> Get()
     {
-        return Ok(new Dictionary<DateTime, int>(
+        return Ok(new Dictionary<DateTime, double>(
             Database.Prediction(DateTime.Now.AddDays(7))
         ));
     }
 
     [HttpPost]
-    public async Task<IActionResult> ManualChange([FromBody] Dictionary<DateTime, int> data)
+    public async Task<IActionResult> ManualChange([FromBody] Dictionary<DateTime, double> data)
     {
         Database.ManualChange(data);
-        return Ok(new Dictionary<DateTime, int>(
+        return Ok(new Dictionary<DateTime, double>(
             Database.Prediction(DateTime.Now.AddDays(-7))
         ));
     }

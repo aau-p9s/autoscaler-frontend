@@ -86,7 +86,7 @@ public class Database
             settings.ScaleUp = oldSettings.ScaleUp;
         if (settings.ScaleDown == null)
             settings.ScaleDown = oldSettings.ScaleDown;
-        if (settings.ScalePeriod == null)
+        if (settings.ScalePeriod is null or < 60000)
             settings.ScalePeriod = oldSettings.ScalePeriod;
 
         command.CommandText = $@"

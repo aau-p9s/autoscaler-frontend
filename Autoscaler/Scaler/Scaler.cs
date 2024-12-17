@@ -39,6 +39,7 @@ class Scaler {
             Console.WriteLine($"current replicas: {replicas}");
             try{
                 forecast = forecaster.Next();
+                forecast = forecaster.Next();
             } catch
             {
                 Database.RemoveAllForecasts();
@@ -78,9 +79,8 @@ class Scaler {
             await kubernetes.Patch($"/apis/apps/v1/namespaces/default/deployments/{Deployment}/scale", patchData);
 
             forecast = forecaster.Next();
-            var delay = (forecast.Timestamp - DateTime.Now).TotalMilliseconds;
-            if(forecast.Timestamp > DateTime.Now)
-                Thread.Sleep((int)delay);
+
+            if (settings.ScalePeriod != null) Thread.Sleep(settings.ScalePeriod.Value);
         }
     }
 }

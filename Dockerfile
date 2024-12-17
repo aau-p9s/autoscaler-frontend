@@ -34,6 +34,7 @@ ENV PATH="/opt/venv/bin:$PATH"
 COPY --from=build-env /App/out .
 COPY ./Autoscaler/predict.py .
 COPY ./Autoscaler/train.py .
+COPY ./Autoscaler/utils.py .
 COPY ./requirements.txt .
 
 # Install Python dependencies into the virtual environment

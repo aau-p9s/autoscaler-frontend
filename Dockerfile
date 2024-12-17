@@ -24,6 +24,10 @@ WORKDIR /App
 RUN apt-get update && apt-get install -y python3 curl && \
     curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
     apt-get install -y nodejs && \
+    apt-get clean && rm -rf /var/lib/apt/lists/* 
+
+# Install Pip
+RUN apt-get update && apt-get install -y python3-pip && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Copy application files

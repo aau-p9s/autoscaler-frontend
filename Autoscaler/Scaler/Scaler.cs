@@ -28,7 +28,7 @@ class Scaler {
         Prometheus prometheus = new(PrometheusAddr);
         Kubernetes.Kubernetes kubernetes = new(KubeAddr);
         Forecaster forecaster = new(Database, Script, Period);
-        Forecast forecast = forecaster.NextForecast();
+        Forecast forecast = await forecaster.NextForecast();
         while(true) {
             var data = await prometheus.QueryRange("sum(rate(container_cpu_usage_seconds_total{container=~\"stregsystemet\"}[5m]))/4*100", DateTime.Now.AddDays(-7), DateTime.Now);
             Database.InsertHistorical(data);
@@ -53,7 +53,7 @@ class Scaler {
 
             kubernetes.Patch($"/apis/apps/v1/namespaces/default/deployments/{Deployment}/scale", patchData);
 
-            forecast = forecaster.NextForecast();
+            forecast = await forecaster.NextForecast();
             var delay = (forecast.Timestamp - DateTime.Now).TotalMilliseconds;
             if(forecast.Timestamp > DateTime.Now)
                 Thread.Sleep((int)delay);

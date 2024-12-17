@@ -78,13 +78,10 @@ public class Database {
         var command = Connection.CreateCommand();
         var oldSettings = GetSettings();
 
-        if (settings.ScaleUp == null)
-            settings.ScaleUp = oldSettings.ScaleUp;
-        if (settings.ScaleDown == null)
-            settings.ScaleDown = oldSettings.ScaleDown;
-        if (settings.ScalePeriod == null)
-            settings.ScalePeriod = oldSettings.ScalePeriod;
-            
+        settings.ScaleUp ??= oldSettings.ScaleUp;
+        settings.ScaleDown ??= oldSettings.ScaleDown;
+        settings.ScalePeriod ??= oldSettings.ScalePeriod;
+
         command.CommandText = @"
             UPDATE settings SET scaleup = $scaleup, scaledown = $scaledown, scaleperiod = $scaleperiod WHERE id = $id
         ";

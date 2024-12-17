@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text.Json;
 using Autoscaler;
 using Autoscaler.Lib.Autoscaler;
 using Autoscaler.Lib.Database;

@@ -1,4 +1,3 @@
-using Autoscaler;
 using Autoscaler.Lib.Autoscaler;
 using Autoscaler.Lib.Database;
 using Microsoft.OpenApi.Models;
@@ -7,7 +6,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 ArgumentParser Args = new(args);
 Database database = new(Args.Get("--database"));
-Scaler scaler = new(database, Args.Get("--deployment"), int.Parse(Args.Get("--period")), Args.Get("--kube-api"), Args.Get("--prometheus-addr"), Args.Get("--scaler"));
+Scaler scaler = new(database, Args.Get("--deployment"), int.Parse(Args.Get("--period")), Args.Get("--kube-api"),
+    Args.Get("--prometheus-addr"), Args.Get("--scaler"));
 
 builder.Services.AddSingleton(database);
 // Add services to the container.
@@ -48,13 +48,10 @@ else
         options.RoutePrefix = string.Empty; // Makes Swagger UI available at the root ("/")
     });
 }
+
 app.UseStaticFiles();
 app.UseRouting();
 app.UseCors();
-app.UseEndpoints(endpoints =>
-{
-    endpoints.MapControllers().RequireCors("AllowSpecificOrigin");
-});
-app.Lifetime.ApplicationStopping.Register(() => {
-});
+app.UseEndpoints(endpoints => { endpoints.MapControllers().RequireCors("AllowSpecificOrigin"); });
+app.Lifetime.ApplicationStopping.Register(() => { });
 app.Run();

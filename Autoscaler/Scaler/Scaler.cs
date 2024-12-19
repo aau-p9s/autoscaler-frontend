@@ -32,7 +32,7 @@ class Scaler {
         Forecast forecast = new();
         await forecaster.Run();
         while(true) {
-            var data = await prometheus.QueryRange("sum(rate(container_cpu_usage_seconds_total{container=~\"stregsystemet\"}[5m]))/4*100", DateTime.Now.AddDays(-7), DateTime.Now);
+            var data = await prometheus.QueryRange("(sum(rate(container_cpu_usage_seconds_total{container=~\"stregsystemet\"}[5m]))/count(container_cpu_usage_seconds_total{container=~\"stregsystemet\"}))*100", DateTime.Now.AddDays(-7), DateTime.Now);
             Database.InsertHistorical(data);
             var settings = Database.GetSettings();
             var replicas = await kubernetes.Replicas(Deployment);

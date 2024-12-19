@@ -13,3 +13,5 @@ out
 obj
 .vscode
 bin
+# ml
+model

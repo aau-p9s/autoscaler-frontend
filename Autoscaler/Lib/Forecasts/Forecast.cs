@@ -1,8 +1,16 @@
-public class Forecast {
-    public readonly DateTime Timestamp;
-    public readonly int Value;
+namespace Autoscaler.Lib.Forecasts;
 
-    public Forecast(DateTime timestamp, int value) {
+public class Forecast
+{
+    public readonly DateTime Timestamp;
+    public readonly double Value;
+
+    public Forecast()
+    {
+        
+    }
+    public Forecast(DateTime timestamp, double value)
+    {
         Timestamp = timestamp;
         Value = value;
     }

@@ -32,9 +32,13 @@ class Scaler {
         Forecast forecast = new();
         await forecaster.Run();
         while(true) {
-            var data = await prometheus.QueryRange("(sum(rate(container_cpu_usage_seconds_total{container=~\"stregsystemet\"}[5m]))/count(container_cpu_usage_seconds_total{container=~\"stregsystemet\"}))*100", DateTime.Now.AddDays(-7), DateTime.Now);
-            Database.InsertHistorical(data);
             var settings = Database.GetSettings();
+            if (settings.ScalePeriod != null)
+            {
+                var data = await prometheus.QueryRange("(sum(rate(container_cpu_usage_seconds_total{container=~\"stregsystemet\"}[5m]))/count(container_cpu_usage_seconds_total{container=~\"stregsystemet\"}))*100", DateTime.Now.AddDays(-7), DateTime.Now, settings.ScalePeriod.Value);
+                Database.InsertHistorical(data);
+            }
+
             var replicas = await kubernetes.Replicas(Deployment);
             Console.WriteLine($"current replicas: {replicas}");
             try{
@@ -79,9 +83,9 @@ class Scaler {
 
             await kubernetes.Patch($"/apis/apps/v1/namespaces/default/deployments/{Deployment}/scale", patchData);
 
-            forecast = forecaster.Next();
-
-            if (settings.ScalePeriod != null) Thread.Sleep(settings.ScalePeriod.Value);
+            var delay = (forecast.Timestamp - DateTime.Now).TotalMilliseconds;
+            if(forecast.Timestamp > DateTime.Now)
+                Thread.Sleep((int)delay);
         }
     }
 }

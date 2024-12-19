@@ -14,9 +14,9 @@ class Prometheus
         client = new HttpClient();
     }
 
-    public async Task<IEnumerable<Tuple<int, double>>> QueryRange(string queryString, DateTime start, DateTime end)
+    public async Task<IEnumerable<Tuple<int, double>>> QueryRange(string queryString, DateTime start, DateTime end, int period)
     {
-        var query = EncodeQuery($"query={queryString}&start={ToRFC3339(start)}&end={ToRFC3339(end)}&step=60s");
+        var query = EncodeQuery($"query={queryString}&start={ToRFC3339(start)}&end={ToRFC3339(end)}&step={period/1000}s");
         List<Tuple<int, double>> result_list = new();
         HttpResponseMessage response;
         try

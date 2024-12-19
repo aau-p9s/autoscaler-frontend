@@ -44,6 +44,7 @@ class Scaler {
             {
                 Database.RemoveAllForecasts();
                 await forecaster.Run();
+                continue;
             }
 
             Forecast newestHistorical = new();

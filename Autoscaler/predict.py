@@ -8,4 +8,3 @@ model = models.StatsForecastAutoTheta.load("model/autotheta_model.pth")
 prediction = model.predict(1440)
 
 print(format_prediction(prediction))
-sys.stderr.write(format_prediction(prediction) + "\n")

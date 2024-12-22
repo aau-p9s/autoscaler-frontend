@@ -57,6 +57,22 @@ public class Database
         command.Parameters.AddWithValue("$amount", value);
         command.ExecuteNonQuery();
     }
+    
+    public void AddDummyHistoricDataFromCurrentDate(int days)
+    {
+        for (int i = 0; i < days; i++)
+        {
+            using (var command = Connection.CreateCommand())
+            {
+                command.CommandText = $@"
+                INSERT INTO {HistoricalTable} (timestamp, amount) VALUES ($time, $amount)
+            ";
+                command.Parameters.AddWithValue("$time", DateTime.Now.AddMinutes(-i));
+                command.Parameters.AddWithValue("$amount", (double)0);
+                command.ExecuteNonQuery();
+            }
+        }
+    }
 
     public Dictionary<int, double> GetByTimestamp(DateTime time)
     {

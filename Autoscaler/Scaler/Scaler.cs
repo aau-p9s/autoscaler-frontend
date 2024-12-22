@@ -27,8 +27,9 @@ class Scaler {
     }
     public async void Scale() {
         Prometheus prometheus = new(PrometheusAddr);
-        Lib.Kubernetes.Kubernetes kubernetes = new(KubeAddr);
+        Kubernetes kubernetes = new(KubeAddr);
         Forecaster forecaster = new(Database, Script, Period, Retrainer);
+        Database.AddDummyHistoricDataFromCurrentDate(20);
         Forecast forecast = new();
         await forecaster.Run();
         while(true) {
@@ -44,8 +45,10 @@ class Scaler {
             try{
                 forecast = forecaster.Next();
                 forecast = forecaster.Next();
+                Console.WriteLine("Run forecast");
             } catch
             {
+                Console.WriteLine("No forecast available, making new prdiction");
                 Database.RemoveAllForecasts();
                 await forecaster.Run();
                 continue;

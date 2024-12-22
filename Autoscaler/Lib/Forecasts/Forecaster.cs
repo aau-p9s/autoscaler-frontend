@@ -81,6 +81,8 @@ public class Forecaster
         {
             Console.WriteLine($"Deserialization failed: {ex.Message}");
         }
+
+        await process.WaitForExitAsync();
     }
 
     public async Task RetrainModel()

@@ -97,7 +97,7 @@ public class Forecaster
         var historical = Database.AllHistorical();
         var dataWithHeaders = new Dictionary<string, object>
         {
-            { "time", historical.Keys },
+            { "time", historical.Keys},
             { "value", historical.Values }
         };
         await process.StandardInput.WriteLineAsync(JsonSerializer.Serialize(dataWithHeaders));

@@ -5,9 +5,11 @@ import pandas as pd
 
 from utils import getData, format_prediction
 
-# main loop
-dataframe = pd.DataFrame(getData())
+data = getData()
+dataframe = pd.DataFrame(data)
+dataframe['time'] = pd.to_datetime(dataframe['time'])  # Ensure 'time' column is datetime
 ts = darts.TimeSeries.from_dataframe(dataframe, "time", "value", freq='min')
+
 # model
 model = models.StatsForecastAutoTheta(season_length=120)
 model.fit(ts)

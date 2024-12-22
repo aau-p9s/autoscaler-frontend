@@ -18,11 +18,7 @@ class Prometheus
 
     public async Task<IEnumerable<Historical>> QueryRange(string queryString, DateTime start, DateTime end, int period)
     {
-        Console.WriteLine(queryString);
-        Console.WriteLine("Start time: " + start);
-        Console.WriteLine("End time: " + end);
         var query = $"query={EncodeQuery(queryString)}&start={ToRFC3339(start)}&end={ToRFC3339(end)}&step={period/1000}s";
-        Console.WriteLine($"Query: {query}");
         List<Historical> result_list = new();
         HttpResponseMessage response;
         try
@@ -36,7 +32,6 @@ class Prometheus
         }
 
         var json = await response.Content.ReadFromJsonAsync<JsonObject>();
-        Console.WriteLine(JsonSerializer.Serialize(json));
         if (json == null)
             goto end;
         var data = json["data"];

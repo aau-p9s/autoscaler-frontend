@@ -60,14 +60,6 @@ public class Forecaster
                 return;
             }
 
-            Console.WriteLine(data.Time.Count);
-            foreach (var item in data.Time)
-                Console.WriteLine(item);
-            foreach (var item in data.Amount)
-            {
-                Console.WriteLine(item);
-            }
-
             Predictions = data;
             List<Forecast> forecast = new();
             for (int i = 0; i < data.Time.Count; i++)

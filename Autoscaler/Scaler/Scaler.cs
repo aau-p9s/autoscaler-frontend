@@ -34,7 +34,7 @@ class Scaler {
         await forecaster.RetrainModel(initData);
         await forecaster.Run();
         Kubernetes kubernetes = new(KubeAddr);
-        Forecast forecast = new();
+        Forecast forecast;
         while(true) {
             var settings = Database.GetSettings();
             //if (settings.ScalePeriod != null)

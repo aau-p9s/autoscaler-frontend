@@ -85,7 +85,7 @@ public class Forecaster
         await process.WaitForExitAsync();
     }
 
-    public async Task RetrainModel()
+    public async Task RetrainModel(IEnumerable<Tuple<int, double>> data)
     {
         Console.WriteLine("Retraining model...");
         Process process = new();
@@ -96,11 +96,10 @@ public class Forecaster
 
         process.Start();
 
-        var historical = Database.AllHistorical();
         var dataWithHeaders = new Dictionary<string, object>
         {
-            { "time", historical.Keys.Select(time => new DateTime(time.Year, time.Month, time.Day, time.Hour, time.Minute, time.Second)) },
-            { "value", historical.Values }
+            { "time", data.Select(x => new DateTime(1970, 1, 1, 0, 0, 0).AddSeconds(x.Item1)).ToList() },
+            { "value", data.Select(x => x.Item2).ToList() }
         };
         await process.StandardInput.WriteLineAsync(JsonSerializer.Serialize(dataWithHeaders));
         process.StandardInput.Close();

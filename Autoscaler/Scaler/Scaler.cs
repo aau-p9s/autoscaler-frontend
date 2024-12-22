@@ -31,17 +31,17 @@ class Scaler {
         var settings2 = Database.GetSettings();
         var initData = await prometheus.QueryRange("(sum(rate(container_cpu_usage_seconds_total{container=~\"stregsystemet\"}[5m]))/count(container_cpu_usage_seconds_total{container=~\"stregsystemet\"}))*100", DateTime.Now.AddDays(-7), DateTime.Now, settings2.ScalePeriod.Value);
         Database.InsertHistorical(initData);
-        await forecaster.RetrainModel();
+        await forecaster.RetrainModel(initData);
         await forecaster.Run();
         Kubernetes kubernetes = new(KubeAddr);
         Forecast forecast = new();
         while(true) {
             var settings = Database.GetSettings();
-            if (settings.ScalePeriod != null)
-            {
+            //if (settings.ScalePeriod != null)
+            //{
                 var data = await prometheus.QueryRange("(sum(rate(container_cpu_usage_seconds_total{container=~\"stregsystemet\"}[5m]))/count(container_cpu_usage_seconds_total{container=~\"stregsystemet\"}))*100", DateTime.Now.AddDays(-7), DateTime.Now, settings.ScalePeriod.Value);
-                Database.InsertHistorical(data);
-            }
+                //Database.InsertHistorical(data);
+            //}
 
             var replicas = await kubernetes.Replicas(Deployment);
             Console.WriteLine($"current replicas: {replicas}");
@@ -68,7 +68,7 @@ class Scaler {
             //Check if the the forecasted value is within 20% of the newest historical value
             if (!(forecast.Value < newestHistorical.Value * 0.8) || !(forecast.Value > newestHistorical.Value * 1.2) || Database.IsManualChange)
             {
-                await forecaster.RetrainModel();
+                await forecaster.RetrainModel(data);
                 await forecaster.Run();
             }
             

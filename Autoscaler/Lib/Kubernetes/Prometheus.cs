@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Web;
 using Autoscaler.Lib.Forecasts;
@@ -31,6 +32,7 @@ class Prometheus
         }
 
         var json = await response.Content.ReadFromJsonAsync<JsonObject>();
+        Console.WriteLine(JsonSerializer.Serialize(json));
         if (json == null)
             goto end;
         var data = json["data"];

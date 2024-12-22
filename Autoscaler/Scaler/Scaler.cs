@@ -30,7 +30,7 @@ class Scaler {
         Prometheus prometheus = new(PrometheusAddr);
         var settings2 = Database.GetSettings();
         var initData = await prometheus.QueryRange("(sum(rate(container_cpu_usage_seconds_total{container=~\"stregsystemet\"}[5m]))/count(container_cpu_usage_seconds_total{container=~\"stregsystemet\"}))*100", DateTime.Now.AddDays(-7), DateTime.Now, settings2.ScalePeriod.Value);
-        Database.InsertHistorical(initData);
+
         await forecaster.RetrainModel(initData);
         await forecaster.Run();
         Kubernetes kubernetes = new(KubeAddr);

@@ -15,3 +15,6 @@ obj
 bin
 # ml
 model
+
+.vs
+.idea

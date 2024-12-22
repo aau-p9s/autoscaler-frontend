@@ -1,5 +1,6 @@
 using System.Text.Json.Nodes;
 using System.Web;
+using Autoscaler.Lib.Forecasts;
 
 namespace Autoscaler.Lib.Kubernetes;
 
@@ -14,10 +15,10 @@ class Prometheus
         client = new HttpClient();
     }
 
-    public async Task<IEnumerable<Tuple<int, double>>> QueryRange(string queryString, DateTime start, DateTime end, int period)
+    public async Task<IEnumerable<Historical>> QueryRange(string queryString, DateTime start, DateTime end, int period)
     {
         var query = EncodeQuery($"query={queryString}&start={ToRFC3339(start)}&end={ToRFC3339(end)}&step={period/1000}s");
-        List<Tuple<int, double>> result_list = new();
+        List<Historical> result_list = new();
         HttpResponseMessage response;
         try
         {
@@ -53,7 +54,7 @@ class Prometheus
 
                 try
                 {
-                    result_list.Add(new Tuple<int, double>((int)(double)value[0], double.Parse((string)value[1])));
+                    result_list.Add(new(new DateTime(1970, 1, 1, 0, 0, 0).AddSeconds((double)value[0]), (double)value[1]));
                 }
                 catch (NullReferenceException e)
                 {

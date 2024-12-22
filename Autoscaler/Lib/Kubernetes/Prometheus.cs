@@ -21,7 +21,7 @@ class Prometheus
         Console.WriteLine(queryString);
         Console.WriteLine("Start time: " + start);
         Console.WriteLine("End time: " + end);
-        var query = EncodeQuery($"query={queryString}&start={ToRFC3339(start)}&end={ToRFC3339(end)}&step={period/1000}s");
+        var query = $"query={EncodeQuery(queryString)}&start={ToRFC3339(start)}&end={ToRFC3339(end)}&step={period/1000}s";
         Console.WriteLine($"Query: {query}");
         List<Historical> result_list = new();
         HttpResponseMessage response;

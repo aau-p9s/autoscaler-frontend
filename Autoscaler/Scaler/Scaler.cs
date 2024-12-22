@@ -59,7 +59,9 @@ class Scaler {
             Forecast newestHistorical = new();
             try
             {
-                newestHistorical = Database.GetNewestHistorical();
+                var hist = data.Last();
+                newestHistorical = new(hist.Timestamp, hist.Value);
+                //newestHistorical = Database.GetNewestHistorical();
             } catch
             {
                 Console.WriteLine("Prometheus is either down or there is no data which should not happen");

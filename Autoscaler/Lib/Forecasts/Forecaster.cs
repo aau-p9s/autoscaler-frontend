@@ -106,7 +106,5 @@ public class Forecaster
         process.StandardInput.Close();
 
         await process.WaitForExitAsync();
-
-        Database.RemoveAllHistorical();
     }
 }

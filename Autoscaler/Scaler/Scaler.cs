@@ -33,7 +33,6 @@ class Scaler {
         Database.InsertHistorical(initData);
         await forecaster.RetrainModel();
         await forecaster.Run();
-        Database.RemoveAllHistorical();
         Kubernetes kubernetes = new(KubeAddr);
         Forecast forecast = new();
         while(true) {

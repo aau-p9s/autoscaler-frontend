@@ -26,12 +26,16 @@ class Scaler {
         thread.Start();
     }
     public async void Scale() {
-        Prometheus prometheus = new(PrometheusAddr);
-        Kubernetes kubernetes = new(KubeAddr);
         Forecaster forecaster = new(Database, Script, Period, Retrainer);
-        Database.AddDummyHistoricDataFromCurrentDate(20);
-        Forecast forecast = new();
+        Prometheus prometheus = new(PrometheusAddr);
+        var settings2 = Database.GetSettings();
+        var initData = await prometheus.QueryRange("(sum(rate(container_cpu_usage_seconds_total{container=~\"stregsystemet\"}[5m]))/count(container_cpu_usage_seconds_total{container=~\"stregsystemet\"}))*100", DateTime.Now.AddDays(-7), DateTime.Now, settings2.ScalePeriod.Value);
+        Database.InsertHistorical(initData);
+        await forecaster.RetrainModel();
         await forecaster.Run();
+        Database.RemoveAllHistorical();
+        Kubernetes kubernetes = new(KubeAddr);
+        Forecast forecast = new();
         while(true) {
             var settings = Database.GetSettings();
             if (settings.ScalePeriod != null)
@@ -45,7 +49,6 @@ class Scaler {
             try{
                 forecast = forecaster.Next();
                 forecast = forecaster.Next();
-                Console.WriteLine("Run forecast");
             } catch
             {
                 Console.WriteLine("No forecast available, making new prdiction");

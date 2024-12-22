@@ -29,7 +29,7 @@ class Scaler {
         Forecaster forecaster = new(Database, Script, Period, Retrainer);
         Prometheus prometheus = new(PrometheusAddr);
         var settings2 = Database.GetSettings();
-        var initData = await prometheus.QueryRange("(sum(rate(container_cpu_usage_seconds_total{container=~\"stregsystemet\"}[5m]))/count(container_cpu_usage_seconds_total{container=~\"stregsystemet\"}))*100", DateTime.Now.AddDays(-7), DateTime.Now, settings2.ScalePeriod.Value);
+        var initData = await prometheus.QueryRange("(sum(rate(container_cpu_usage_seconds_total{container=~\"stregsystemet\"}[5m]))/count(container_cpu_usage_seconds_total{container=~\"stregsystemet\"}))*100", DateTime.Now.AddHours(-12), DateTime.Now, settings2.ScalePeriod.Value);
 
         await forecaster.RetrainModel(initData);
         await forecaster.Run();
@@ -39,7 +39,7 @@ class Scaler {
             var settings = Database.GetSettings();
             //if (settings.ScalePeriod != null)
             //{
-                var data = await prometheus.QueryRange("(sum(rate(container_cpu_usage_seconds_total{container=~\"stregsystemet\"}[5m]))/count(container_cpu_usage_seconds_total{container=~\"stregsystemet\"}))*100", DateTime.Now.AddDays(-7), DateTime.Now, settings.ScalePeriod.Value);
+                var data = await prometheus.QueryRange("(sum(rate(container_cpu_usage_seconds_total{container=~\"stregsystemet\"}[5m]))/count(container_cpu_usage_seconds_total{container=~\"stregsystemet\"}))*100", DateTime.Now.AddHours(-12), DateTime.Now, settings.ScalePeriod.Value);
                 //Database.InsertHistorical(data);
             //}
 

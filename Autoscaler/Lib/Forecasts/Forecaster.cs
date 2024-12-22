@@ -14,15 +14,18 @@ public class Forecaster
     readonly int Period;
     readonly string Retrainer;
     readonly Database.Database Database;
-    
 
-    public Forecaster(Database.Database database, string script, int period, string retrainer) {
+
+    public Forecaster(Database.Database database, string script, int period, string retrainer)
+    {
         Script = script;
         Period = period;
         Database = database;
         Retrainer = retrainer;
     }
-    public Forecast Next() {
+
+    public Forecast Next()
+    {
         if (Predictions.Time.Count == 0) return null;
         var time = Predictions.Time[0];
         var amount = Predictions.Amount[0];
@@ -31,7 +34,9 @@ public class Forecaster
         return new Forecast(time, amount);
     }
 
-    public async Task Run() {
+    public async Task Run()
+    {
+        Console.WriteLine("Making predictions...");
         Database.RemoveAllForecasts();
         var options = new JsonSerializerOptions
         {
@@ -48,13 +53,13 @@ public class Forecaster
         if (line == null) return;
         try
         {
-            var data = JsonSerializer.Deserialize<PredictionResult>(line,options);
+            var data = JsonSerializer.Deserialize<PredictionResult>(line, options);
             if (data == null)
             {
                 Console.WriteLine("Deserialization returned null.");
                 return;
             }
-    
+
             Console.WriteLine(data.Time.Count);
             foreach (var item in data.Time)
                 Console.WriteLine(item);
@@ -62,12 +67,14 @@ public class Forecaster
             {
                 Console.WriteLine(item);
             }
+
             Predictions = data;
             List<Forecast> forecast = new();
             for (int i = 0; i < data.Time.Count; i++)
             {
                 forecast.Add(new Forecast(data.Time[i], data.Amount[i]));
             }
+
             Database.InsertForecast(forecast);
         }
         catch (Exception ex)
@@ -78,6 +85,7 @@ public class Forecaster
 
     public async Task RetrainModel()
     {
+        Console.WriteLine("Retraining model...");
         Process process = new();
         process.StartInfo.RedirectStandardOutput = true;
         process.StartInfo.RedirectStandardInput = true;
@@ -87,7 +95,12 @@ public class Forecaster
         process.Start();
 
         var historical = Database.AllHistorical();
-        await process.StandardInput.WriteLineAsync(JsonSerializer.Serialize(historical));
+        var dataWithHeaders = new Dictionary<string, object>
+        {
+            { "time", historical.Keys },
+            { "value", historical.Values }
+        };
+        await process.StandardInput.WriteLineAsync(JsonSerializer.Serialize(dataWithHeaders));
         process.StandardInput.Close();
 
         await process.WaitForExitAsync();

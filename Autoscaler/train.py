@@ -7,10 +7,8 @@ from utils import getData, format_prediction
 
 # main loop
 dataframe = pd.DataFrame(getData())
-ts = darts.TimeSeries.from_dataframe(dataframe, "time", "value", freq='s')
+ts = darts.TimeSeries.from_dataframe(dataframe, "time", "value", freq='min')
 # model
-model = models.ARIMA()
+model = models.StatsForecastAutoTheta(season_length=120)
 model.fit(ts)
-model.save("model/model.pth")
-prediction = model.predict(10)
-print(format_prediction(prediction))
+model.save("model/autotheta_model.pth")

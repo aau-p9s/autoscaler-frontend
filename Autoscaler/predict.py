@@ -4,8 +4,8 @@ import sys
 
 from utils import getData, format_prediction
 
-model = models.ARIMA.load("model/model.pth")
-prediction = model.predict(10)
+model = models.StatsForecastAutoTheta.load("model/autotheta_model.pth")
+prediction = model.predict(1440)
 
 print(format_prediction(prediction))
 sys.stderr.write(format_prediction(prediction) + "\n")

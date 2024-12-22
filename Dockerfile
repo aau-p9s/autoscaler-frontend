@@ -32,6 +32,7 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 # Copy application files
 COPY --from=build-env /App/out .
+COPY ./Autoscaler/model .
 COPY ./Autoscaler/predict.py .
 COPY ./Autoscaler/train.py .
 COPY ./Autoscaler/utils.py .

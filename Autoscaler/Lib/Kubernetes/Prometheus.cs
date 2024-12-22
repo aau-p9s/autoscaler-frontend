@@ -55,7 +55,7 @@ class Prometheus
 
                 try
                 {
-                    result_list.Add(new(new DateTime(1970, 1, 1, 0, 0, 0).AddSeconds((double)value[0]), (double)value[1]));
+                    result_list.Add(new(new DateTime(1970, 1, 1, 0, 0, 0).AddSeconds((double)value[0]), double.Parse((string)value[1])));
                 }
                 catch (NullReferenceException e)
                 {

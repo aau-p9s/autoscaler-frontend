@@ -15,6 +15,7 @@
         dotnetCorePackages.dotnet_8.aspnetcore
         dotnetCorePackages.dotnet_8.runtime
         roslyn-ls
+        python312
       ];
     };
   };

@@ -59,7 +59,7 @@ class Scaler {
             Forecast newestHistorical = new();
             try
             {
-                var hist = data.Last();
+                var hist = data.First();
                 newestHistorical = new(hist.Timestamp, hist.Value);
                 //newestHistorical = Database.GetNewestHistorical();
             } catch
